@@ -1,0 +1,27 @@
+{
+  "name": "podcast-stats-webapp",
+  "version": "0.0.1",
+  "description": "Frontend part of the Gowebly project.",
+  "license": "MIT",
+  "browserslist": "> 0.5%, last 2 versions, not dead",
+  "scripts": {
+    "fmt": "prettier --write .",
+    "build": "parcel build ./assets/scripts.js ./assets/styles.css --dist-dir ./static",
+    "dev": "parcel build ./assets/scripts.js ./assets/styles.css --dist-dir ./static --no-optimize",
+    "watch": "parcel watch ./assets/scripts.js ./assets/styles.css --dist-dir ./static --no-optimize"
+  },
+  "dependencies": {
+    "tailwindcss": "latest",
+    "daisyui": "latest",
+    "htmx.org": "latest"
+  },
+  "devDependencies": {
+    "@tailwindcss/forms": "latest",
+    "@tailwindcss/typography": "latest",
+    "@tailwindcss/postcss": "latest",
+    "@parcel/transformer-css": "latest",
+    "parcel": "latest",
+    "postcss": "latest",
+    "prettier": "latest"
+  }
+}
