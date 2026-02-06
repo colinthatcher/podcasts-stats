@@ -1,0 +1,4 @@
+[tools]
+air = "latest"
+go = "latest"
+npm = "latest"

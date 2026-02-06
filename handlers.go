@@ -2,6 +2,7 @@ package main
 
 import (
 	"errors"
+	"log/slog"
 	"net/http"
 
 	"github.com/angelofallars/htmx-go"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 )
+
+const PODCAST_NAME = "Eagle Eye: A Philadelphia Eagles Podcast"
 
 // Views
 
@@ -47,16 +50,48 @@ func IndexViewHandler(c *gin.Context) {
 }
 
 func PodcastEpisodesViewHandler(c *gin.Context) {
-	// TODO: pull the information regarding the episodes from somewhere
-	podcast, err := internal.GetPodcast("Eagle Eye: A Philadelphia Eagles Podcast", 0, 20)
+	// check if this is a search request
+	var podcast *internal.Podcast
+	var err error
+	searchOpts := &internal.SearchOptions{}
+	if err := c.ShouldBindQuery(searchOpts); err != nil {
+		slog.ErrorContext(c.Request.Context(), "failed to parse search parameters.", "err", err)
+	}
+
+	slog.InfoContext(c.Request.Context(), "performing episode search with query.", "searchOpts", searchOpts)
+	podcast, err = internal.GetPodcast(PODCAST_NAME, searchOpts)
 	if err != nil {
+		slog.ErrorContext(c.Request.Context(), "failed to find podcast.", "name", PODCAST_NAME)
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
+	slog.InfoContext(c.Request.Context(), "found podcast.", "name", PODCAST_NAME)
 
-	pages := pages.PodcastEpisodes(podcast)
+	pages := pages.PodcastEpisodes(podcast, searchOpts)
 	podcastEpisodesTemplate := templates.Layout(
 		"Podcast Episodes",
+		nil,
+		pages,
+	)
+	if err := htmx.NewResponse().RenderTempl(c.Request.Context(), c.Writer, podcastEpisodesTemplate); err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+}
+
+func PodcastEpisodeViewHandler(c *gin.Context) {
+	episodeId := c.Param("id")
+	episode, err := internal.GetPodcastEpisode(PODCAST_NAME, episodeId)
+	if err != nil {
+		slog.ErrorContext(c.Request.Context(), "failed to find podcast episode.", "id", episodeId)
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	slog.InfoContext(c.Request.Context(), "found podcast episode.", "episode", episode)
+
+	pages := pages.PodcastEpisode(episode)
+	podcastEpisodesTemplate := templates.Layout(
+		episode.Title,
 		nil,
 		pages,
 	)
