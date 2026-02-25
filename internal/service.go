@@ -42,11 +42,17 @@ type Stats struct {
 
 func (p *Podcast) deepcopy() *Podcast {
 	copyPodcast := &Podcast{}
-	copyPodcast.Channel = &Channel{}
-	copyPodcast.Channel.Title = p.Channel.Title
-	copyPodcast.Channel.Items = []*Item{}
-	copyPodcast.Stats = &Stats{}
-	copyPodcast.Stats.TotalItems = p.Stats.TotalItems
+	if p.Channel != nil {
+		copyPodcast.Channel = &Channel{}
+		copyPodcast.Channel.Title = p.Channel.Title
+		if len(p.Channel.Items) > 0 {
+			copyPodcast.Channel.Items = []*Item{}
+		}
+	}
+	if p.Stats != nil {
+		copyPodcast.Stats = &Stats{}
+		copyPodcast.Stats.TotalItems = p.Stats.TotalItems
+	}
 
 	for _, item := range p.Channel.Items {
 		copyItem := &Item{}
@@ -58,7 +64,7 @@ func (p *Podcast) deepcopy() *Podcast {
 		copyItem.Description = item.Description
 		copyItem.Duration = item.Duration
 		copyItem.PublishDate = item.PublishDate
-		copyPodcast.Channel.Items = append(copyPodcast.Channel.Items, item)
+		copyPodcast.Channel.Items = append(copyPodcast.Channel.Items, copyItem)
 	}
 
 	return copyPodcast
@@ -122,13 +128,12 @@ func init() {
 
 	xmlFile, err := os.Open("internal/resources/episodes.xml")
 	if err != nil {
-		slog.Error("Failed to read local podcast file. err=", err.Error())
+		slog.Error("Failed to read local podcast file.", "err", err.Error())
 	}
 	defer xmlFile.Close()
 	byteValue, _ := ioutil.ReadAll(xmlFile)
 
 	podcast := PodcastFromBytes(byteValue)
-	slog.Debug("podcast", podcast.Channel.Title)
 	store.addPodcast(podcast)
 
 	slog.Info("Finished service init method")
@@ -138,7 +143,7 @@ func PodcastFromBytes(bytes []byte) *Podcast {
 	var podcast Podcast
 	err := xml.Unmarshal(bytes, &podcast)
 	if err != nil {
-		slog.Error("failed to unmarshal xml podcast file. err=", err.Error())
+		slog.Error("failed to unmarshal xml podcast file.", "err", err.Error())
 		return nil
 	}
 
@@ -157,14 +162,14 @@ func PodcastFromBytes(bytes []byte) *Podcast {
 		hours := parsedDuration[0]
 		duration, err := time.ParseDuration(fmt.Sprintf("%sh%sm%ss", hours, minutes, seconds))
 		if err != nil {
-			slog.Error("failed to parse podcast duration. err=", err.Error())
+			slog.Error("failed to parse podcast duration.", "err", err.Error())
 			return nil
 		}
 
 		// parse out time string
 		parsedTime, err := time.Parse("Mon, 2 Jan 2006 15:04:05 +0000", item.PublishDateStr)
 		if err != nil {
-			slog.Error("failed to parse podcast publish date. err=", err.Error())
+			slog.Error("failed to parse podcast publish date.", "err", err.Error())
 			return nil
 		}
 

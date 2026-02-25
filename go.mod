@@ -6,7 +6,7 @@ require (
 	github.com/a-h/templ v0.3.977
 	github.com/angelofallars/htmx-go v0.5.0
 	github.com/gin-gonic/gin v1.11.0
-	github.com/google/uuid v1.6.0
+	github.com/google/go-cmp v0.7.0
 	github.com/gowebly/helpers v0.4.0
 )
 
