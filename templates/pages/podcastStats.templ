@@ -1,0 +1,59 @@
+package pages
+
+import (
+	"fmt"
+	"github.com/colinthatcher/podcast-stats-webapp/internal"
+)
+
+templ PodcastStats(stats []*internal.PodcastStats) {
+	<div class="">
+		for _, stat := range stats {
+			<div class="collapse collapse-open collapse-arrow bg-base-100 border-base-300 border">
+				<input type="checkbox"/>
+				<div class="collapse-title font-semibold bg-primary text-primary-context text-lg">{ stat.Year }</div>
+				<div class="collapse-content text-sm text-center">
+					<div class="stats shadow">
+						<div class="stat">
+							<div class="stat-figure text-primary"></div>
+							<div class="stat-title">Number of Episodes</div>
+							<div class="stat-value">{ stat.NumEpisodes }</div>
+							<div class="stat-desc"></div>
+						</div>
+						<div class="stat">
+							<div class="stat-figure text-secondary"></div>
+							<div class="stat-title">Average Duration</div>
+							<div class="stat-value">{ stat.AvgDuration }</div>
+							<div class="stat-desc"></div>
+						</div>
+						<div class="stat">
+							<div class="stat-figure text-secondary"></div>
+							<div class="stat-title">Total Time</div>
+							<div class="stat-value">{ stat.TotalDuration }</div>
+							<div class="stat-desc"></div>
+						</div>
+						<div class="stat">
+							<div class="stat-figure text-secondary"></div>
+							<div class="stat-title">Longest Episode</div>
+							<div class="stat-value">{ stat.LongestEpisode }</div>
+							<div class="stat-desc">
+								<a class="bg-primary text-primary-context" href={ templ.URL(fmt.Sprintf("/podcast/episodes/%d", stat.LongestEpisodeId)) }>
+									{ stat.LongestEpisodeTitle }
+								</a>
+							</div>
+						</div>
+						<div class="stat">
+							<div class="stat-figure text-secondary"></div>
+							<div class="stat-title">Shortest Episode</div>
+							<div class="stat-value">{ stat.ShortestEpisode }</div>
+							<div class="stat-desc">
+								<a class="bg-primary text-primary-context" href={ templ.URL(fmt.Sprintf("/podcast/episodes/%d", stat.ShortestEpisodeId)) }>
+									{ stat.ShortestEpisodeTitle }
+								</a>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		}
+	</div>
+}

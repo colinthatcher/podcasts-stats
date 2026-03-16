@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log/slog"
+	"math"
 	"os"
+	"slices"
 	"sort"
 	"strconv"
 	"strings"
@@ -76,7 +78,7 @@ type Store struct {
 }
 
 type SearchOptions struct {
-	Query  string `form:"search"`
+	Query  string `form:"query"`
 	Start  int    `form:"start,default=0"`
 	Offset int    `form:"offset,default=20"`
 }
@@ -148,9 +150,13 @@ func PodcastFromBytes(bytes []byte) *Podcast {
 	}
 
 	// filter out if the last episode is a "Trailer"
-	// TODO: This can be improved by checking trailer against a lowercased title
-	if strings.Contains(podcast.Channel.Items[len(podcast.Channel.Items)-1].Title, "Trailer") {
-		podcast.Channel.Items = podcast.Channel.Items[:len(podcast.Channel.Items)-1]
+	const trailer = "trailer"
+	for i, item := range podcast.Channel.Items {
+		if strings.ToLower(item.Title) == trailer {
+			slog.Debug("Filtered out the trailer episode.")
+			podcast.Channel.Items = append(podcast.Channel.Items[:i], podcast.Channel.Items[i+1:]...)
+			break
+		}
 	}
 
 	// special parsing
@@ -201,15 +207,8 @@ func GetPodcast(name string, searchOpts *SearchOptions) (*Podcast, error) {
 
 	// filter episodes to display in the table
 	if searchOpts.Query != "" {
-		matchedItems := []*Item{}
-		for _, item := range podcast.Channel.Items {
-			if strings.Contains(item.Title, searchOpts.Query) {
-				matchedItems = append(matchedItems, item)
-			} else if strings.Contains(item.Description, searchOpts.Query) {
-				matchedItems = append(matchedItems, item)
-			}
-		}
-		podcast.Channel.Items = matchedItems
+		foundItems := searchPodcastEpisodes(podcast, searchOpts)
+		podcast.Channel.Items = foundItems
 	}
 
 	maxPage := len(podcast.Channel.Items)
@@ -228,6 +227,100 @@ func GetPodcast(name string, searchOpts *SearchOptions) (*Podcast, error) {
 	return podcast, nil
 }
 
+type Term struct {
+	Value       string
+	TargetField string
+	Operation   string
+	Negated     bool
+}
+
+func (t *Term) String() string {
+	return fmt.Sprintf("Term(Value=%s TargetField=%s Operation=%s Negated=%t)", t.Value, t.TargetField, t.Operation, t.Negated)
+}
+
+func createTerm(parts []string) *Term {
+	field := parts[0]
+	value := parts[1]
+
+	neg := false
+	if field[0] == '-' {
+		field = field[1:]
+		neg = true
+	}
+
+	return &Term{
+		Value:       value,
+		TargetField: field,
+		Negated:     neg,
+	}
+
+}
+
+func searchPodcastEpisodes(podcast *Podcast, searchOpts *SearchOptions) []*Item {
+	// Parse search terms
+	rawTerms := strings.Split(strings.ToLower(searchOpts.Query), " ")
+	terms := []*Term{}
+	for _, term := range rawTerms {
+		operation := ""
+		var t *Term
+		switch {
+		case strings.Contains(term, ":"):
+			operation = ":"
+			parts := strings.Split(term, ":")
+			if len(parts) != 2 {
+				slog.Warn("got invalid search term", "term", term)
+				return nil
+			}
+			t = createTerm(parts)
+			t.Operation = operation
+		default:
+			t = &Term{
+				Value: term,
+			}
+		}
+		terms = append(terms, t)
+	}
+	slog.Info("parsed search terms", "terms", terms)
+
+	// translate search terms against items list
+	items := podcast.Channel.Items
+	for _, term := range terms {
+		items = searchEpisodesByTerm(term, items)
+	}
+	return items
+}
+
+func searchEpisodesByTerm(term *Term, items []*Item) []*Item {
+	foundItems := []*Item{}
+	for _, item := range items {
+		switch term.TargetField {
+		case "title":
+			condition := strings.Contains(strings.ToLower(item.Title), strings.ToLower(term.Value))
+			if (term.Negated && !condition) || (!term.Negated && condition) {
+				foundItems = append(foundItems, item)
+				continue
+			}
+		case "desc":
+			condition := strings.Contains(strings.ToLower(item.Description), strings.ToLower(term.Value))
+			if (term.Negated && !condition) || (!term.Negated && condition) {
+				foundItems = append(foundItems, item)
+				continue
+			}
+		default:
+			// default all search across all text fields
+			if strings.Contains(strings.ToLower(item.Title), strings.ToLower(term.Value)) {
+				foundItems = append(foundItems, item)
+				continue
+			}
+			if strings.Contains(strings.ToLower(item.Description), strings.ToLower(term.Value)) {
+				foundItems = append(foundItems, item)
+				continue
+			}
+		}
+	}
+	return foundItems
+}
+
 func GetPodcastEpisode(name string, id string) (*Item, error) {
 	// get all podcast episodes
 	epId, err := strconv.Atoi(id)
@@ -240,4 +333,97 @@ func GetPodcastEpisode(name string, id string) (*Item, error) {
 	}
 	// then find spefic episode
 	return episode, nil
+}
+
+type PodcastStats struct {
+	Year                 string
+	NumEpisodes          int
+	TotalDuration        time.Duration
+	AvgDuration          time.Duration
+	LongestEpisode       time.Duration
+	LongestEpisodeTitle  string
+	LongestEpisodeDate   time.Time
+	LongestEpisodeId     int
+	ShortestEpisode      time.Duration
+	ShortestEpisodeTitle string
+	ShortestEpisodeDate  time.Time
+	ShortestEpisodeId    int
+}
+
+func GetPodcastStats(name string) ([]*PodcastStats, error) {
+	podcast, found := store.getPodcast(name)
+	if !found {
+		return nil, fmt.Errorf("podcast not found")
+	}
+
+	// gather stats
+	totalStats := &PodcastStats{
+		Year:            "total",
+		ShortestEpisode: math.MaxInt64,
+	}
+	stats := make(map[string]*PodcastStats)
+	for _, item := range podcast.Channel.Items {
+		totalStats.TotalDuration += item.Duration
+		totalStats.NumEpisodes++
+		if item.Duration > totalStats.LongestEpisode {
+			totalStats.LongestEpisode = item.Duration
+			totalStats.LongestEpisodeDate = item.PublishDate
+			totalStats.LongestEpisodeTitle = item.Title
+			totalStats.LongestEpisodeId = item.Id
+		}
+		if item.Duration < totalStats.ShortestEpisode {
+			totalStats.ShortestEpisode = item.Duration
+			totalStats.ShortestEpisodeDate = item.PublishDate
+			totalStats.ShortestEpisodeTitle = item.Title
+			totalStats.ShortestEpisodeId = item.Id
+		}
+
+		year := strconv.Itoa(item.PublishDate.Year())
+		if yearStat, exists := stats[year]; exists {
+			yearStat.NumEpisodes++
+			yearStat.TotalDuration += item.Duration
+			if item.Duration > yearStat.LongestEpisode {
+				yearStat.LongestEpisode = item.Duration
+				yearStat.LongestEpisodeDate = item.PublishDate
+				yearStat.LongestEpisodeTitle = item.Title
+				yearStat.LongestEpisodeId = item.Id
+			}
+			if item.Duration < yearStat.ShortestEpisode {
+				yearStat.ShortestEpisode = item.Duration
+				yearStat.ShortestEpisodeDate = item.PublishDate
+				yearStat.ShortestEpisodeTitle = item.Title
+				yearStat.ShortestEpisodeId = item.Id
+			}
+
+		} else {
+			stats[year] = &PodcastStats{
+				Year:            strconv.Itoa(item.PublishDate.Year()),
+				NumEpisodes:     1,
+				TotalDuration:   item.Duration,
+				LongestEpisode:  item.Duration,
+				ShortestEpisode: item.Duration,
+			}
+		}
+	}
+	stats["total"] = totalStats
+
+	var years []string
+	for _, v := range stats {
+		// grab the year for sorting
+		years = append(years, v.Year)
+
+		// calc avg duration of episodes
+		avg := int(v.TotalDuration.Seconds()) / v.NumEpisodes
+		v.AvgDuration = time.Duration(avg) * time.Second
+	}
+
+	// Sort by total, and then newest year first
+	slices.Sort(years)
+	slices.Reverse(years)
+
+	output := []*PodcastStats{}
+	for _, year := range years {
+		output = append(output, stats[year])
+	}
+	return output, nil
 }

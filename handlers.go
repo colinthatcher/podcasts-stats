@@ -19,6 +19,7 @@ const PODCAST_NAME = "Eagle Eye: A Philadelphia Eagles Podcast"
 // Views
 
 // indexViewHandler handles a view for the index page.
+// TODO: This should eventually be removed and the home page be actually made
 func IndexViewHandler(c *gin.Context) {
 
 	// Define template meta tags.
@@ -36,8 +37,9 @@ func IndexViewHandler(c *gin.Context) {
 	// Define template layout for index page.
 	indexTemplate := templates.Layout(
 		"Welcome to example!", // define title text
-		metaTags,              // define meta tags
-		bodyContent,           // define body content
+		templates.Episodes,
+		metaTags,    // define meta tags
+		bodyContent, // define body content
 	)
 
 	// Render index page template.
@@ -54,7 +56,7 @@ func PodcastEpisodesViewHandler(c *gin.Context) {
 	var podcast *internal.Podcast
 	var err error
 	searchOpts := &internal.SearchOptions{}
-	if err := c.ShouldBindQuery(searchOpts); err != nil {
+	if err := c.ShouldBind(searchOpts); err != nil {
 		slog.ErrorContext(c.Request.Context(), "failed to parse search parameters.", "err", err)
 	}
 
@@ -70,6 +72,7 @@ func PodcastEpisodesViewHandler(c *gin.Context) {
 	pages := pages.PodcastEpisodes(podcast, searchOpts)
 	podcastEpisodesTemplate := templates.Layout(
 		"Podcast Episodes",
+		templates.Episodes,
 		nil,
 		pages,
 	)
@@ -92,10 +95,34 @@ func PodcastEpisodeViewHandler(c *gin.Context) {
 	pages := pages.PodcastEpisode(episode)
 	podcastEpisodesTemplate := templates.Layout(
 		episode.Title,
+		templates.Episodes,
 		nil,
 		pages,
 	)
 	if err := htmx.NewResponse().RenderTempl(c.Request.Context(), c.Writer, podcastEpisodesTemplate); err != nil {
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+}
+
+func PodcastStastsViewHandler(c *gin.Context) {
+	slog.InfoContext(c.Request.Context(), "performing episode search with query.", "searchOpts", nil)
+	stats, err := internal.GetPodcastStats(PODCAST_NAME)
+	if err != nil {
+		slog.ErrorContext(c.Request.Context(), "failed to get podcast stats.", "name", PODCAST_NAME)
+		c.AbortWithStatus(http.StatusNotFound)
+		return
+	}
+	slog.InfoContext(c.Request.Context(), "found podcast.", "name", PODCAST_NAME)
+
+	pages := pages.PodcastStats(stats)
+	template := templates.Layout(
+		"Podcast Stats",
+		templates.Stats,
+		nil,
+		pages,
+	)
+	if err := htmx.NewResponse().RenderTempl(c.Request.Context(), c.Writer, template); err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}

@@ -7,10 +7,8 @@ import (
 
 templ PodcastEpisodes(podcast *internal.Podcast, searchOpts *internal.SearchOptions) {
 	<div id="episode-table">
-		<h1 class="font-title font-bold text-2xl text-center">Eagle Eye Podcast Episodes</h1>
-		<br/>
 		<div>
-			<form method="get" action="/podcast/episodes">
+			<form action="/podcast/episodes">
 				<label class="input">
 					<svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
 						<g
@@ -25,24 +23,24 @@ templ PodcastEpisodes(podcast *internal.Podcast, searchOpts *internal.SearchOpti
 						</g>
 					</svg>
 					<input
-						id="search"
-						type="search"
-						name="search"
-						placeholder="Search"
+						id="query"
+						type="query"
+						name="query"
+						placeholder="Query"
 						value={ searchOpts.Query }
 						hx-get="/podcast/episodes"
-						hx-trigger="search, keyup delay:200ms changed"
+						hx-trigger="search, keyup delay:500ms changed"
 						hx-target="#episode-table"
 						hx-push-url="true"
 					/>
 				</label>
-				<input type="submit" value="Search"/>
+				<input class="bg-primary text-primary-content btn btn-ghost" type="submit" value="Search"/>
 			</form>
 		</div>
 		<div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
 			<table class="table">
 				<!-- head -->
-				<thead>
+				<thead class="bg-primary text-primary-context">
 					<tr>
 						<th></th>
 						<th>Title</th>
@@ -52,7 +50,6 @@ templ PodcastEpisodes(podcast *internal.Podcast, searchOpts *internal.SearchOpti
 					</tr>
 				</thead>
 				<tbody>
-					// TODO: Link to episode details page showing description
 					for _, item := range podcast.Channel.Items {
 						<tr>
 							<th>{ item.Id }</th>
@@ -62,7 +59,9 @@ templ PodcastEpisodes(podcast *internal.Podcast, searchOpts *internal.SearchOpti
 							<td><a href={ templ.URL(fmt.Sprintf("/podcast/episodes/%d", item.Id)) }>link</a></td>
 						</tr>
 					}
-					if podcast.Stats.TotalItems > 20 && searchOpts.Start < podcast.Stats.TotalItems {
+					// TODO: Pagination should maintain the same query
+					// TODO: This total items check could be improved
+					if len(podcast.Channel.Items) > 0 && podcast.Stats.TotalItems > 20 && searchOpts.Start < podcast.Stats.TotalItems {
 						{{ nextPageUrl := fmt.Sprintf("/podcast/episodes?start=%d&offset=%d", (searchOpts.Start + searchOpts.Offset), searchOpts.Offset) }}
 						if searchOpts.Query != "" {
 							{{ nextPageUrl = nextPageUrl + fmt.Sprintf("&search=%s", searchOpts.Query) }}
