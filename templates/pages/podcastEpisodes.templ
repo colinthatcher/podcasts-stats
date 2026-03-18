@@ -39,7 +39,6 @@ templ PodcastEpisodes(podcast *internal.Podcast, searchOpts *internal.SearchOpti
 		</div>
 		<div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100">
 			<table class="table">
-				<!-- head -->
 				<thead class="bg-primary text-primary-context">
 					<tr>
 						<th></th>
@@ -59,10 +58,13 @@ templ PodcastEpisodes(podcast *internal.Podcast, searchOpts *internal.SearchOpti
 							<td><a href={ templ.URL(fmt.Sprintf("/podcast/episodes/%d", item.Id)) }>link</a></td>
 						</tr>
 					}
-					// TODO: Pagination should maintain the same query
 					// TODO: This total items check could be improved
+					{{ baseNextPageUrl := "/podcast/episodes?" }}
+					if searchOpts.Query != "" {
+						{{ baseNextPageUrl = baseNextPageUrl + fmt.Sprintf("query=%s&", searchOpts.Query) }}
+					}
 					if len(podcast.Channel.Items) > 0 && podcast.Stats.TotalItems > 20 && searchOpts.Start < podcast.Stats.TotalItems {
-						{{ nextPageUrl := fmt.Sprintf("/podcast/episodes?start=%d&offset=%d", (searchOpts.Start + searchOpts.Offset), searchOpts.Offset) }}
+						{{ nextPageUrl := fmt.Sprintf("%sstart=%d&offset=%d", baseNextPageUrl, (searchOpts.Start + searchOpts.Offset), searchOpts.Offset) }}
 						if searchOpts.Query != "" {
 							{{ nextPageUrl = nextPageUrl + fmt.Sprintf("&search=%s", searchOpts.Query) }}
 						}
