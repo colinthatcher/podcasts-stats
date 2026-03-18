@@ -13,8 +13,14 @@ import (
 	"time"
 )
 
-const podcastName = "eagleeye"
-const feedUrl = "https://feeds.simplecast.com/_ENNUG3a"
+// const podcastName = "eagleeye"
+// const feedUrl = "https://feeds.simplecast.com/_ENNUG3a"
+
+// const podcastName = "gobirds"
+// const feedUrl = "https://feeds.megaphone.fm/ENTDM6324343768"
+
+const podcastName = "philliestalk"
+const feedUrl = "https://feeds.simplecast.com/GtcqZGk4"
 
 type Podcast struct {
 	XMLName xml.Name `xml:"rss"`
@@ -129,18 +135,37 @@ func PodcastFromBytes(bytes []byte) *Podcast {
 	// special parsing
 	for i, item := range podcast.Channel.Items {
 		// parse out proper duration
-		parsedDuration := strings.Split(item.DurationStr, ":")
-		seconds := parsedDuration[2]
-		minutes := parsedDuration[1]
-		hours := parsedDuration[0]
-		duration, err := time.ParseDuration(fmt.Sprintf("%sh%sm%ss", hours, minutes, seconds))
-		if err != nil {
-			slog.Error("failed to parse podcast duration.", "err", err.Error())
-			return nil
+		var duration time.Duration
+		if strings.Contains(item.DurationStr, ":") {
+			parsedDuration := strings.Split(item.DurationStr, ":")
+			seconds := parsedDuration[2]
+			minutes := parsedDuration[1]
+			hours := parsedDuration[0]
+			duration, err = time.ParseDuration(fmt.Sprintf("%sh%sm%ss", hours, minutes, seconds))
+			if err != nil {
+				slog.Error("failed to parse podcast duration as timestamp", "err", err)
+				return nil
+			}
+		} else {
+			// assume duration string is number of seconds an episode is
+			seconds, err := strconv.Atoi(item.DurationStr)
+			if err != nil {
+				slog.Error("failed to parse podcast duration as seconds to int", "err", err)
+				return nil
+			}
+			duration, err = time.ParseDuration(fmt.Sprintf("%ds", seconds))
+			if err != nil {
+				slog.Error("failed to parse podcast duration as seconds", "err", err)
+				return nil
+			}
 		}
 
 		// parse out time string
-		parsedTime, err := time.Parse("Mon, 2 Jan 2006 15:04:05 +0000", item.PublishDateStr)
+		parseString := "Mon, 2 Jan 2006 15:04:05 +0000"
+		if strings.Contains(item.PublishDateStr, "-") {
+			parseString = "Mon, 2 Jan 2006 15:04:05 -0000"
+		}
+		parsedTime, err := time.Parse(parseString, item.PublishDateStr)
 		if err != nil {
 			slog.Error("failed to parse podcast publish date.", "err", err.Error())
 			return nil

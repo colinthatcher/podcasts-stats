@@ -28,10 +28,6 @@ templ PodcastEpisodes(podcast *internal.Podcast, searchOpts *internal.SearchOpti
 						name="query"
 						placeholder="Query"
 						value={ searchOpts.Query }
-						hx-get="/podcast/episodes"
-						hx-trigger="search, keyup delay:500ms changed"
-						hx-target="#episode-table"
-						hx-push-url="true"
 					/>
 				</label>
 				<input class="bg-primary text-primary-content btn btn-ghost" type="submit" value="Search"/>
@@ -54,7 +50,7 @@ templ PodcastEpisodes(podcast *internal.Podcast, searchOpts *internal.SearchOpti
 							<th>{ item.Id }</th>
 							<td>{ item.Title }</td>
 							<td>{ item.PublishDateStr }</td>
-							<td>{ item.DurationStr }</td>
+							<td>{ item.Duration }</td>
 							<td><a href={ templ.URL(fmt.Sprintf("/podcast/episodes/%d", item.Id)) }>link</a></td>
 						</tr>
 					}

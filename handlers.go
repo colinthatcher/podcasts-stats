@@ -14,7 +14,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const PODCAST_NAME = "Eagle Eye: A Philadelphia Eagles Podcast"
+// const PODCAST_NAME = "Eagle Eye: A Philadelphia Eagles Podcast"
+// const PODCAST_NAME = "Go Birds!"
+const PODCAST_NAME = "Phillies Talk: A Philadelphia Phillies Podcast"
 
 // Views
 
@@ -38,6 +40,7 @@ func IndexViewHandler(c *gin.Context) {
 	indexTemplate := templates.Layout(
 		"Welcome to example!", // define title text
 		templates.Episodes,
+		PODCAST_NAME,
 		metaTags,    // define meta tags
 		bodyContent, // define body content
 	)
@@ -73,6 +76,7 @@ func PodcastEpisodesViewHandler(c *gin.Context) {
 	podcastEpisodesTemplate := templates.Layout(
 		"Podcast Episodes",
 		templates.Episodes,
+		PODCAST_NAME,
 		nil,
 		pages,
 	)
@@ -96,6 +100,7 @@ func PodcastEpisodeViewHandler(c *gin.Context) {
 	podcastEpisodesTemplate := templates.Layout(
 		episode.Title,
 		templates.Episodes,
+		PODCAST_NAME,
 		nil,
 		pages,
 	)
@@ -119,6 +124,7 @@ func PodcastStastsViewHandler(c *gin.Context) {
 	template := templates.Layout(
 		"Podcast Stats",
 		templates.Stats,
+		PODCAST_NAME,
 		nil,
 		pages,
 	)

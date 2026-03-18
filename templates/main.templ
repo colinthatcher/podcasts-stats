@@ -17,7 +17,7 @@ var NavElementName = map[NavElement]string{
 	Stats:    "stats",
 }
 
-templ Layout(title string, activeNav NavElement, metaTags, bodyContent templ.Component) {
+templ Layout(title string, activeNav NavElement, podcastName string, metaTags, bodyContent templ.Component) {
 	<!DOCTYPE html>
 	<html lang="en" data-theme="dark">
 		<head>
@@ -46,7 +46,7 @@ templ Layout(title string, activeNav NavElement, metaTags, bodyContent templ.Com
 			<link href="/static/styles.css" rel="stylesheet"/>
 		</head>
 		<body onload={ pages.BodyScripts() } hx-boost="true">
-			<h1 class="font-title font-bold text-2xl text-center">Eagle Eye Podcast Episodes</h1>
+			<h1 class="font-title font-bold text-2xl text-center">{ podcastName }</h1>
 			<br/>
 			<div class="navbar bg-base-100 shadow-sm">
 				@navLinks(Episodes, activeNav)
