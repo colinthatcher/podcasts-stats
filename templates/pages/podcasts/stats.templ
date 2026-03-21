@@ -1,11 +1,11 @@
-package pages
+package podcasts
 
 import (
 	"fmt"
 	"github.com/colinthatcher/podcast-stats-webapp/internal"
 )
 
-templ PodcastStats(stats []*internal.PodcastStats) {
+templ PodcastStats(name string, stats []*internal.PodcastStats) {
 	<div class="">
 		for _, stat := range stats {
 			<div class="collapse collapse-open collapse-arrow bg-base-100 border-base-300 border">
@@ -46,7 +46,7 @@ templ PodcastStats(stats []*internal.PodcastStats) {
 							<div class="stat-title">Shortest Episode</div>
 							<div class="stat-value">{ stat.ShortestEpisode }</div>
 							<div class="stat-desc">
-								<a class="bg-primary text-primary-context" href={ templ.URL(fmt.Sprintf("/podcast/episodes/%d", stat.ShortestEpisodeId)) }>
+								<a class="bg-primary text-primary-context" href={ templ.URL(fmt.Sprintf("/podcasts/%s/episodes/%d", name, stat.ShortestEpisodeId)) }>
 									{ stat.ShortestEpisodeTitle }
 								</a>
 							</div>

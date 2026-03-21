@@ -65,9 +65,10 @@ func runServer() error {
 
 	// Handle index page view.
 	router.GET("/", IndexViewHandler)
-	router.GET("/podcast/episodes", PodcastEpisodesViewHandler)
-	router.GET("/podcast/episodes/:id", PodcastEpisodeViewHandler)
-	router.GET("/podcast/stats", PodcastStastsViewHandler)
+	router.GET("/podcasts", PodcastsViewHandler)
+	router.GET("/podcasts/:name/episodes", PodcastEpisodesViewHandler)
+	router.GET("/podcasts/:name/episodes/:id", PodcastEpisodeViewHandler)
+	router.GET("/podcasts/:name/stats", PodcastStastsViewHandler)
 
 	// Handle API endpoints.
 	router.GET("/api/hello-world", ShowContentAPIHandler)

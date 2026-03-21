@@ -1,23 +1,8 @@
 package templates
 
-import (
-	"fmt"
-	"github.com/colinthatcher/podcast-stats-webapp/templates/pages"
-)
+import "github.com/colinthatcher/podcast-stats-webapp/templates/pages"
 
-type NavElement int
-
-const (
-	Episodes NavElement = iota
-	Stats
-)
-
-var NavElementName = map[NavElement]string{
-	Episodes: "episodes",
-	Stats:    "stats",
-}
-
-templ Layout(title string, activeNav NavElement, podcastName string, metaTags, bodyContent templ.Component) {
+templ Layout(title string, metaTags, bodyContent templ.Component) {
 	<!DOCTYPE html>
 	<html lang="en" data-theme="dark">
 		<head>
@@ -46,22 +31,8 @@ templ Layout(title string, activeNav NavElement, podcastName string, metaTags, b
 			<link href="/static/styles.css" rel="stylesheet"/>
 		</head>
 		<body onload={ pages.BodyScripts() } hx-boost="true">
-			<h1 class="font-title font-bold text-2xl text-center">{ podcastName }</h1>
-			<br/>
-			<div class="navbar bg-base-100 shadow-sm">
-				@navLinks(Episodes, activeNav)
-				@navLinks(Stats, activeNav)
-			</div>
 			@bodyContent
 			<script src="/static/scripts.js"></script>
 		</body>
 	</html>
-}
-
-templ navLinks(nav NavElement, activeNav NavElement) {
-	{{ navClass := "btn btn-ghost text-xl" }}
-	if nav == activeNav {
-		{{ navClass = fmt.Sprintf("%s %s", "bg-primary text-primary-content", navClass) }}
-	}
-	<a class={ navClass } href={ templ.URL(fmt.Sprintf("/podcast/%s", NavElementName[nav])) }>{ NavElementName[nav] }</a>
 }

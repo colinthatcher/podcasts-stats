@@ -1,0 +1,16 @@
+package pages
+
+import "fmt"
+
+templ Podcasts(podcasts []string) {
+	<div>
+		<ul>
+			for _, podcast := range podcasts {
+				<li>
+					{{ url := fmt.Sprintf("/podcasts/%s/episodes", podcast) }}
+					<a href={ templ.URL(url) }>{ podcast }</a>
+				</li>
+			}
+		</ul>
+	</div>
+}

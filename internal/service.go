@@ -7,20 +7,10 @@ import (
 	"math"
 	"os"
 	"slices"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
 )
-
-// const podcastName = "eagleeye"
-// const feedUrl = "https://feeds.simplecast.com/_ENNUG3a"
-
-// const podcastName = "gobirds"
-// const feedUrl = "https://feeds.megaphone.fm/ENTDM6324343768"
-
-const podcastName = "philliestalk"
-const feedUrl = "https://feeds.simplecast.com/GtcqZGk4"
 
 type Podcast struct {
 	XMLName xml.Name `xml:"rss"`
@@ -82,36 +72,38 @@ func (p *Podcast) deepcopy() *Podcast {
 
 func init() {
 	slog.Info("Falling into service init method")
+	for _, podcast := range AvailablePodcasts {
+		feedBytes, err := GetRSSFeed(podcast.Name, podcast.FeedUrl)
+		if err != nil {
+			slog.Error("failed to retrieve feed content", "podcastName", podcast.Name, "error", err)
+			os.Exit(1)
+		}
 
-	feedBytes, err := GetRSSFeed(podcastName, feedUrl)
-	if err != nil {
-		slog.Error("failed to retrieve feed content", "error", err)
-		os.Exit(1)
+		parsedPodcast := PodcastFromBytes(feedBytes)
+		store.addPodcast(podcast.Name, parsedPodcast)
 	}
-
-	podcast := PodcastFromBytes(feedBytes)
-	store.addPodcast(podcast)
-
 	slog.Info("Finished service init method")
 }
 
 func PeriodicallyFetchRSSFeed() {
 	// start process to periodically fetch the rss feed
-	rssFeedFetchTicker := time.NewTicker(1 * time.Hour)
+	rssFeedFetchTicker := time.NewTicker(59 * time.Minute)
 	slog.Info("Starting background rss feed checker...")
 	for {
 		select {
 		case <-rssFeedFetchTicker.C:
 			slog.Info("checking for updates to podcast feed...")
-			feedBytes, err := GetRSSFeed(podcastName, feedUrl)
-			if err != nil {
-				slog.Error("failed to update podcast in ticker", "error", err)
+			for _, podcast := range AvailablePodcasts {
+				feedBytes, err := GetRSSFeed(podcast.Name, podcast.FeedUrl)
+				if err != nil {
+					slog.Error("failed to update podcast in ticker", "podcastName", podcast.Name, "error", err)
+				}
+
+				parsedPodcast := PodcastFromBytes(feedBytes)
+				store.addPodcast(podcast.Name, parsedPodcast)
 			}
-			podcast := PodcastFromBytes(feedBytes)
-			store.addPodcast(podcast)
 		}
 	}
-
 }
 
 func PodcastFromBytes(bytes []byte) *Podcast {
@@ -122,18 +114,16 @@ func PodcastFromBytes(bytes []byte) *Podcast {
 		return nil
 	}
 
-	// filter out if the last episode is a "Trailer"
+	// special parsing
 	const trailer = "trailer"
 	for i, item := range podcast.Channel.Items {
+		// filter out if the last episode is a "Trailer"
 		if strings.ToLower(item.Title) == trailer {
 			slog.Debug("Filtered out the trailer episode.")
 			podcast.Channel.Items = append(podcast.Channel.Items[:i], podcast.Channel.Items[i+1:]...)
-			break
+			continue
 		}
-	}
 
-	// special parsing
-	for i, item := range podcast.Channel.Items {
 		// parse out proper duration
 		var duration time.Duration
 		if strings.Contains(item.DurationStr, ":") {
@@ -171,17 +161,10 @@ func PodcastFromBytes(bytes []byte) *Podcast {
 			return nil
 		}
 
-		item.Id = len(podcast.Channel.Items) - i
+		item.Id = len(podcast.Channel.Items) - i - 1
 		item.Duration = duration
 		item.PublishDate = parsedTime
 	}
-
-	// sort items by published date, descending
-	sort.Slice(podcast.Channel.Items, func(i int, j int) bool {
-		episodeI := podcast.Channel.Items[i]
-		episodeJ := podcast.Channel.Items[j]
-		return episodeI.PublishDate.After(episodeJ.PublishDate)
-	})
 
 	podcast.Stats = &Stats{}
 	podcast.Stats.TotalItems = len(podcast.Channel.Items)

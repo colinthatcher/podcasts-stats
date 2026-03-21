@@ -1,11 +1,11 @@
-package pages
+package podcasts
 
 import (
 	"fmt"
 	"github.com/colinthatcher/podcast-stats-webapp/internal"
 )
 
-templ PodcastEpisodes(podcast *internal.Podcast, searchOpts *internal.SearchOptions) {
+templ PodcastEpisodes(name string, podcast *internal.Podcast, searchOpts *internal.SearchOptions) {
 	<div id="episode-table">
 		<div>
 			<form action="/podcast/episodes">
@@ -51,11 +51,11 @@ templ PodcastEpisodes(podcast *internal.Podcast, searchOpts *internal.SearchOpti
 							<td>{ item.Title }</td>
 							<td>{ item.PublishDateStr }</td>
 							<td>{ item.Duration }</td>
-							<td><a href={ templ.URL(fmt.Sprintf("/podcast/episodes/%d", item.Id)) }>link</a></td>
+							<td><a href={ templ.URL(fmt.Sprintf("/podcasts/%s/episodes/%d", name, item.Id)) }>link</a></td>
 						</tr>
 					}
 					// TODO: This total items check could be improved
-					{{ baseNextPageUrl := "/podcast/episodes?" }}
+					{{ baseNextPageUrl := fmt.Sprintf("/podcasts/%s/episodes?", name) }}
 					if searchOpts.Query != "" {
 						{{ baseNextPageUrl = baseNextPageUrl + fmt.Sprintf("query=%s&", searchOpts.Query) }}
 					}

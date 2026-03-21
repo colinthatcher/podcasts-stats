@@ -1,4 +1,4 @@
-package pages
+package podcasts
 
 import "github.com/colinthatcher/podcast-stats-webapp/internal"
 
@@ -13,5 +13,7 @@ templ PodcastEpisode(episode *internal.Item) {
 		<span class="font-bold">Description: </span>
 		<hr/>
 		@templ.Raw(episode.Description)
+		<br/>
+		<p>{ episode.Id }; { episode.Title }</p>
 	</div>
 }

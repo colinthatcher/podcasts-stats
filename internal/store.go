@@ -1,17 +1,41 @@
 package internal
 
-import "log/slog"
+import (
+	"log/slog"
+	"sort"
+)
 
 // Global state for the service file
 var (
 	store = NewStore()
 )
 
+type AvailablePodcastMetadata struct {
+	Name    string
+	FeedUrl string
+}
+
+// TODO: Make use of this new variable
+var AvailablePodcasts = []*AvailablePodcastMetadata{
+	{
+		Name:    "eagleeye",
+		FeedUrl: "https://feeds.simplecast.com/_ENNUG3a",
+	},
+	{
+		Name:    "gobirds",
+		FeedUrl: "https://feeds.megaphone.fm/ENTDM6324343768",
+	},
+	{
+		Name:    "philliestalk",
+		FeedUrl: "https://feeds.simplecast.com/GtcqZGk4",
+	},
+}
+
 type Store struct {
 	podcasts map[string]*Podcast
 }
 
-func (s *Store) addPodcast(podcast *Podcast) {
+func (s *Store) addPodcast(name string, podcast *Podcast) {
 	if s.podcasts == nil {
 		slog.Warn("failed to add podcast due to store be uninitialized")
 		return
@@ -20,7 +44,7 @@ func (s *Store) addPodcast(podcast *Podcast) {
 		slog.Warn("failed to add podcast to local store")
 		return
 	}
-	s.podcasts[podcast.Channel.Title] = podcast
+	s.podcasts[name] = podcast
 }
 
 func (s *Store) getPodcast(name string) (*Podcast, bool) {
@@ -34,12 +58,15 @@ func (s *Store) getEpisode(name string, id int) (*Item, bool) {
 		return nil, false
 	}
 
-	foundEpisode := pod.Channel.Items[id-1]
-	if foundEpisode == nil {
+	slog.Info("pre searching...")
+	i := sort.Search(len(pod.Channel.Items), func(i int) bool {
+		slog.Info("searching...", "i", i, "podId", pod.Channel.Items[i].Id, "id", id)
+		return pod.Channel.Items[i].Id <= id
+	})
+	if i >= len(pod.Channel.Items) {
 		return nil, false
 	}
-
-	return foundEpisode, found
+	return pod.Channel.Items[i], true
 }
 
 func NewStore() *Store {
