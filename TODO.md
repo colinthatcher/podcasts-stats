@@ -1,5 +1,11 @@
-- [ ] Create hardcoded list of podcasts which can be viewed
+- [x] Create hardcoded list of podcasts which can be viewed
+- [x] Add additional search terms for durtaion, published date, quoted strings
+- [x] Support filtering for stats page
 - [ ] Create new html page to display list of available podcasts
-- [ ] Add additional search terms for durtaion, and published date
-- [ ] Support filtering for stats page
 - [ ] Redo UI for a podcast to show search query across both tabs
+    - expanding or very large search bar. Maybe should be a text area?
+    - button to clear the search
+    - persist search bar across relevant pages
+    - general container for the entire page
+    - fix css issues
+

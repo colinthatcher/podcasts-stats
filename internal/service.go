@@ -115,15 +115,7 @@ func PodcastFromBytes(bytes []byte) *Podcast {
 	}
 
 	// special parsing
-	const trailer = "trailer"
 	for i, item := range podcast.Channel.Items {
-		// filter out if the last episode is a "Trailer"
-		if strings.ToLower(item.Title) == trailer {
-			slog.Debug("Filtered out the trailer episode.")
-			podcast.Channel.Items = append(podcast.Channel.Items[:i], podcast.Channel.Items[i+1:]...)
-			continue
-		}
-
 		// parse out proper duration
 		var duration time.Duration
 		if strings.Contains(item.DurationStr, ":") {
@@ -195,7 +187,6 @@ func GetPodcast(name string, searchOpts *SearchOptions) (*Podcast, error) {
 	if end > maxPage {
 		end = maxPage
 	}
-	slog.Info("", "start", start, "offset", end)
 	podcast.Channel.Items = podcast.Channel.Items[start:end]
 	podcast.Stats.TotalItems = maxPage
 
@@ -231,10 +222,10 @@ type PodcastStats struct {
 	ShortestEpisodeId    int
 }
 
-func GetPodcastStats(name string) ([]*PodcastStats, error) {
-	podcast, found := store.getPodcast(name)
-	if !found {
-		return nil, fmt.Errorf("podcast not found")
+func GetPodcastStats(name string, searchOpts *SearchOptions) ([]*PodcastStats, error) {
+	podcast, err := GetPodcast(name, searchOpts)
+	if err != nil {
+		return nil, fmt.Errorf("podcast not found. err=%v", err.Error())
 	}
 
 	// gather stats

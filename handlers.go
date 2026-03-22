@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"log/slog"
+	"math"
 	"net/http"
 
 	"github.com/angelofallars/htmx-go"
@@ -90,7 +91,7 @@ func PodcastEpisodesViewHandler(c *gin.Context) {
 	podcastEpisodesTemplate := templates.Layout(
 		"Podcast Episodes",
 		nil,
-		podcasts.PodcastBaseLayout(podcastName, podcasts.Episodes, episodePage),
+		podcasts.PodcastBaseLayout(podcastName, podcasts.Episodes, episodePage, searchOpts),
 	)
 	if err := htmx.NewResponse().RenderTempl(c.Request.Context(), c.Writer, podcastEpisodesTemplate); err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -113,7 +114,7 @@ func PodcastEpisodeViewHandler(c *gin.Context) {
 	podcastEpisodesTemplate := templates.Layout(
 		episode.Title,
 		nil,
-		podcasts.PodcastBaseLayout(podcastName, podcasts.Episodes, pages),
+		podcasts.PodcastBaseLayout(podcastName, podcasts.Episodes, pages, nil),
 	)
 	if err := htmx.NewResponse().RenderTempl(c.Request.Context(), c.Writer, podcastEpisodesTemplate); err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)
@@ -123,8 +124,16 @@ func PodcastEpisodeViewHandler(c *gin.Context) {
 
 func PodcastStastsViewHandler(c *gin.Context) {
 	podcastName := c.Param("name")
-	slog.InfoContext(c.Request.Context(), "performing episode search with query.", "searchOpts", nil)
-	stats, err := internal.GetPodcastStats(podcastName)
+	searchOpts := &internal.SearchOptions{}
+	if err := c.ShouldBind(searchOpts); err != nil {
+		slog.ErrorContext(c.Request.Context(), "failed to parse search parameters.", "err", err)
+	}
+	slog.InfoContext(c.Request.Context(), "gathering podcast stats", "searchOpts", searchOpts)
+
+	// unset default search options to get all available episodes for the search criteria
+	searchOpts.Start = 0
+	searchOpts.Offset = math.MaxInt
+	stats, err := internal.GetPodcastStats(podcastName, searchOpts)
 	if err != nil {
 		slog.ErrorContext(c.Request.Context(), "failed to get podcast stats.", "name", podcastName)
 		c.AbortWithStatus(http.StatusNotFound)
@@ -132,11 +141,11 @@ func PodcastStastsViewHandler(c *gin.Context) {
 	}
 	slog.InfoContext(c.Request.Context(), "found podcast.", "name", podcastName)
 
-	pages := podcasts.PodcastStats(podcastName, stats)
+	pages := podcasts.PodcastStats(podcastName, stats, searchOpts)
 	template := templates.Layout(
 		"Podcast Stats",
 		nil,
-		podcasts.PodcastBaseLayout(podcastName, podcasts.Stats, pages),
+		podcasts.PodcastBaseLayout(podcastName, podcasts.Stats, pages, searchOpts),
 	)
 	if err := htmx.NewResponse().RenderTempl(c.Request.Context(), c.Writer, template); err != nil {
 		c.AbortWithStatus(http.StatusInternalServerError)

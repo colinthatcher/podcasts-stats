@@ -1,6 +1,9 @@
 package podcasts
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/colinthatcher/podcast-stats-webapp/internal"
+)
 
 type NavElement int
 
@@ -14,20 +17,24 @@ var NavElementName = map[NavElement]string{
 	Stats:    "stats",
 }
 
-templ PodcastBaseLayout(podcastName string, activeNav NavElement, podcastContent templ.Component) {
+templ PodcastBaseLayout(podcastName string, activeNav NavElement, podcastContent templ.Component, searchOpts *internal.SearchOptions) {
 	<h1 class="font-title font-bold text-2xl text-center">{ podcastName }</h1>
 	<br/>
 	<div class="navbar bg-base-100 shadow-sm">
-		@PodcastNav(podcastName, Episodes, activeNav)
-		@PodcastNav(podcastName, Stats, activeNav)
+		@PodcastNav(podcastName, Episodes, activeNav, searchOpts)
+		@PodcastNav(podcastName, Stats, activeNav, searchOpts)
 	</div>
 	@podcastContent
 }
 
-templ PodcastNav(podcastName string, nav NavElement, activeNav NavElement) {
+templ PodcastNav(podcastName string, nav NavElement, activeNav NavElement, searchOpts *internal.SearchOptions) {
 	{{ navClass := "btn btn-ghost text-xl" }}
+	{{ navUrl := fmt.Sprintf("/podcasts/%s/%s", podcastName, NavElementName[nav]) }}
 	if nav == activeNav {
 		{{ navClass = fmt.Sprintf("%s %s", "bg-primary text-primary-content", navClass) }}
 	}
-	<a class={ navClass } href={ templ.URL(fmt.Sprintf("/podcasts/%s/%s", podcastName, NavElementName[nav])) }>{ NavElementName[nav] }</a>
+	if searchOpts != nil {
+		{{ navUrl = fmt.Sprintf("%s?query=%s", navUrl, searchOpts.Query) }}
+	}
+	<a class={ navClass } href={ templ.URL(navUrl) }>{ NavElementName[nav] }</a>
 }

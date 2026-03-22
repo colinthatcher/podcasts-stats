@@ -8,7 +8,7 @@ import (
 templ PodcastEpisodes(name string, podcast *internal.Podcast, searchOpts *internal.SearchOptions) {
 	<div id="episode-table">
 		<div>
-			<form action="/podcast/episodes">
+			<form action={ templ.URL(fmt.Sprintf("/podcasts/%s/episodes", name)) }>
 				<label class="input">
 					<svg class="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
 						<g

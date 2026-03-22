@@ -5,7 +5,8 @@ import (
 	"github.com/colinthatcher/podcast-stats-webapp/internal"
 )
 
-templ PodcastStats(name string, stats []*internal.PodcastStats) {
+templ PodcastStats(name string, stats []*internal.PodcastStats, searchOpts *internal.SearchOptions) {
+	// TODO: Display search, and allow for it to be easily cleared
 	<div class="">
 		for _, stat := range stats {
 			<div class="collapse collapse-open collapse-arrow bg-base-100 border-base-300 border">

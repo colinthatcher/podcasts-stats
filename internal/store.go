@@ -18,15 +18,15 @@ type AvailablePodcastMetadata struct {
 // TODO: Make use of this new variable
 var AvailablePodcasts = []*AvailablePodcastMetadata{
 	{
-		Name:    "eagleeye",
+		Name:    "Eagle Eye",
 		FeedUrl: "https://feeds.simplecast.com/_ENNUG3a",
 	},
 	{
-		Name:    "gobirds",
+		Name:    "Go Birds!",
 		FeedUrl: "https://feeds.megaphone.fm/ENTDM6324343768",
 	},
 	{
-		Name:    "philliestalk",
+		Name:    "Phillies Talk",
 		FeedUrl: "https://feeds.simplecast.com/GtcqZGk4",
 	},
 }
@@ -58,9 +58,7 @@ func (s *Store) getEpisode(name string, id int) (*Item, bool) {
 		return nil, false
 	}
 
-	slog.Info("pre searching...")
 	i := sort.Search(len(pod.Channel.Items), func(i int) bool {
-		slog.Info("searching...", "i", i, "podId", pod.Channel.Items[i].Id, "id", id)
 		return pod.Channel.Items[i].Id <= id
 	})
 	if i >= len(pod.Channel.Items) {
