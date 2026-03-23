@@ -10,7 +10,7 @@ import (
 type SearchOptions struct {
 	Query  string `form:"query"`
 	Start  int    `form:"start,default=0"`
-	Offset int    `form:"offset,default=20"`
+	Offset int    `form:"offset,default=50"`
 }
 
 type Term struct {
@@ -51,6 +51,12 @@ func createTerm(term string) *Term {
 	}
 
 	parts := strings.Split(term, operation)
+
+	if string(parts[0][0]) == NEGATIVE {
+		parts[0] = parts[0][1:]
+		t.Negated = true
+	}
+
 	switch operation {
 	case EQUALS:
 		if parts[0] != TITLE &&
@@ -73,11 +79,6 @@ func createTerm(term string) *Term {
 		t = &Term{
 			Value: term,
 		}
-	}
-
-	if string(t.Value[0]) == NEGATIVE {
-		t.Value = t.Value[1:]
-		t.Negated = true
 	}
 
 	return t
@@ -124,6 +125,7 @@ func searchSplitQuery(searchOpts *SearchOptions) []string {
 
 func searchPodcastEpisodes(podcast *Podcast, searchOpts *SearchOptions) []*Item {
 	// Parse search terms
+	// TODO: Doesn't work with the example query
 	rawTerms := searchSplitQuery(searchOpts)
 	slog.Info("checking search string splitting", "rawTerms", rawTerms)
 
