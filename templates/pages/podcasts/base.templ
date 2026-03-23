@@ -18,13 +18,112 @@ var NavElementName = map[NavElement]string{
 }
 
 templ PodcastBaseLayout(podcastName string, activeNav NavElement, podcastContent templ.Component, searchOpts *internal.SearchOptions) {
-	<h1 class="font-title font-bold text-2xl text-center">{ podcastName }</h1>
-	<br/>
-	<div class="navbar bg-base-100 shadow-sm">
-		@PodcastNav(podcastName, Episodes, activeNav, searchOpts)
-		@PodcastNav(podcastName, Stats, activeNav, searchOpts)
+	<div class="max-w-5xl mx-auto px-4">
+		<div class="pt-2 mb-2">
+			<a href="/podcasts" class="text-sm text-base-content/50 hover:text-base-content transition-colors">← All podcasts</a>
+		</div>
+		<h1 class="font-title font-bold text-2xl text-center mb-4">{ podcastName }</h1>
 	</div>
-	@podcastContent
+	<div class="navbar bg-base-100 shadow-sm px-4">
+		<div class="flex-1 max-w-5xl mx-auto w-full flex">
+			<div class="navbar bg-base-100 shadow-sm">
+				<div class="w-full mx-auto flex flex-col sm:flex-row sm:items-center gap-2 px-4">
+					<div class="flex items-center gap-2">
+						@PodcastNav(podcastName, Episodes, activeNav, searchOpts)
+						@PodcastNav(podcastName, Stats, activeNav, searchOpts)
+					</div>
+					<div class="flex gap-2 flex-1 min-w-0">
+						<form
+							action={ templ.URL(fmt.Sprintf("/podcasts/%s/%s", podcastName, NavElementName[activeNav])) }
+							class="flex gap-2 flex-1 min-w-0"
+						>
+							<label class="input input-bordered flex items-center gap-2 flex-1">
+								<svg class="h-[1em] opacity-50 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+									<g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+										<circle cx="11" cy="11" r="8"></circle>
+										<path d="m21 21-4.3-4.3"></path>
+									</g>
+								</svg>
+								<input
+									id="query"
+									type="text"
+									name="query"
+									placeholder="Search episodes..."
+									if searchOpts != nil {
+										value={ searchOpts.Query }
+									}
+									class="grow text-base min-w-0"
+								/>
+								if searchOpts != nil && searchOpts.Query != "" {
+									<a
+										href={ templ.URL(fmt.Sprintf("/podcasts/%s/%s", podcastName, NavElementName[activeNav])) }
+										class="opacity-40 hover:opacity-100 transition-opacity text-base-content shrink-0"
+										title="Clear search"
+									>✕</a>
+								}
+							</label>
+							<div class="dropdown dropdown-end dropdown-bottom">
+								<div tabindex="0" role="button" class="btn btn-ghost btn-square opacity-50 hover:opacity-100">
+									<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+										<circle cx="12" cy="12" r="10"></circle>
+										<path d="M12 16v-4"></path>
+										<path d="M12 8h.01"></path>
+									</svg>
+								</div>
+								<div tabindex="0" class="dropdown-content z-10 bg-base-200 border border-base-300 rounded-lg shadow-lg p-4 w-140 text-sm">
+									<p class="font-medium mb-3">Search syntax</p>
+									<div class="flex flex-col gap-2 text-base-content/70">
+										<div>
+											<code class="text-primary">eagle</code>
+											<span class="ml-2">match in title or description</span>
+										</div>
+										<div>
+											<code class="text-primary">title=eagle</code>
+											<span class="ml-2">title contains word</span>
+										</div>
+										<div>
+											<code class="text-primary">description=eagle</code>
+											<span class="ml-2">description contains word</span>
+										</div>
+										<div>
+											<code class="text-primary">duration=1h30m</code>
+											<span class="ml-2">exact duration match</span>
+										</div>
+										<div>
+											<code class="text-primary">duration{ ">" }1h</code>
+											<span class="ml-2">longer than duration</span>
+										</div>
+										<div>
+											<code class="text-primary">duration{ "<" }30m</code>
+											<span class="ml-2">shorter than duration</span>
+										</div>
+										<div>
+											<code class="text-primary">publish_time=2024-01-01T00:00:00Z</code>
+											<span class="ml-2">exact publish date (RFC3339)</span>
+										</div>
+										<div>
+											<code class="text-primary">publish_time{ ">" }2024-01-01T00:00:00Z</code>
+											<span class="ml-2">published after date</span>
+										</div>
+										<div class="pt-2 border-t border-base-300 text-base-content/50">
+											<p class="mb-1">Quote any string to search for a sequence of words. <code class="text-pimary/80">"eagle eye"</code></p>
+											<p class="mb-1">Prefix any term with <code class="text-primary/80">-</code> to negate it. Example:</p>
+											<code class="text-primary/80 block mt-1">title="eagle eye" -duration{ "<" }1h -description=highlights</code>
+											<p class="mt-2">Terms are chained with AND logic.</p>
+										</div>
+									</div>
+								</div>
+							</div>
+							<input class="bg-primary text-primary-content btn" type="submit" value="Search"/>
+						</form>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div>
+		@podcastContent
+	</div>
 }
 
 templ PodcastNav(podcastName string, nav NavElement, activeNav NavElement, searchOpts *internal.SearchOptions) {

@@ -6,50 +6,47 @@ import (
 )
 
 templ PodcastStats(name string, stats []*internal.PodcastStats, searchOpts *internal.SearchOptions) {
-	// TODO: Display search, and allow for it to be easily cleared
-	<div class="">
-		for _, stat := range stats {
-			<div class="collapse collapse-open collapse-arrow bg-base-100 border-base-300 border">
-				<input type="checkbox"/>
-				<div class="collapse-title font-semibold bg-primary text-primary-context text-lg">{ stat.Year }</div>
-				<div class="collapse-content text-sm text-center">
-					<div class="stats shadow">
+	<div class="flex flex-col gap-3">
+		for i, stat := range stats {
+			<div class="collapse collapse-arrow border border-base-300 rounded-lg overflow-hidden">
+				<input
+					type="checkbox"
+					if i == 0 {
+						checked
+					}
+				/>
+				<div class="collapse-title bg-base-200 flex items-center gap-4">
+					<span class="text-base font-medium">{ stat.Year }</span>
+					<span class="text-sm text-base-content/50">{ stat.NumEpisodes } episodes &middot; avg { stat.AvgDuration }</span>
+				</div>
+				<div class="collapse-content pt-3">
+					<div class="stats shadow w-full">
 						<div class="stat">
-							<div class="stat-figure text-primary"></div>
-							<div class="stat-title">Number of Episodes</div>
-							<div class="stat-value">{ stat.NumEpisodes }</div>
-							<div class="stat-desc"></div>
+							<div class="stat-title">Avg duration</div>
+							<div class="stat-value text-xl">{ stat.AvgDuration }</div>
 						</div>
 						<div class="stat">
-							<div class="stat-figure text-secondary"></div>
-							<div class="stat-title">Average Duration</div>
-							<div class="stat-value">{ stat.AvgDuration }</div>
-							<div class="stat-desc"></div>
+							<div class="stat-title">Total time</div>
+							<div class="stat-value text-xl">{ stat.TotalDuration }</div>
 						</div>
 						<div class="stat">
-							<div class="stat-figure text-secondary"></div>
-							<div class="stat-title">Total Time</div>
-							<div class="stat-value">{ stat.TotalDuration }</div>
-							<div class="stat-desc"></div>
-						</div>
-						<div class="stat">
-							<div class="stat-figure text-secondary"></div>
-							<div class="stat-title">Longest Episode</div>
-							<div class="stat-value">{ stat.LongestEpisode }</div>
+							<div class="stat-title">Longest episode</div>
+							<div class="stat-value text-xl">{ stat.LongestEpisode }</div>
 							<div class="stat-desc">
-								<a class="bg-primary text-primary-context" href={ templ.URL(fmt.Sprintf("/podcast/episodes/%d", stat.LongestEpisodeId)) }>
-									{ stat.LongestEpisodeTitle }
-								</a>
+								<a
+									class="text-primary truncate block"
+									href={ templ.URL(fmt.Sprintf("/podcasts/%s/episodes/%d", name, stat.LongestEpisodeId)) }
+								>{ stat.LongestEpisodeTitle }</a>
 							</div>
 						</div>
 						<div class="stat">
-							<div class="stat-figure text-secondary"></div>
-							<div class="stat-title">Shortest Episode</div>
-							<div class="stat-value">{ stat.ShortestEpisode }</div>
+							<div class="stat-title">Shortest episode</div>
+							<div class="stat-value text-xl">{ stat.ShortestEpisode }</div>
 							<div class="stat-desc">
-								<a class="bg-primary text-primary-context" href={ templ.URL(fmt.Sprintf("/podcasts/%s/episodes/%d", name, stat.ShortestEpisodeId)) }>
-									{ stat.ShortestEpisodeTitle }
-								</a>
+								<a
+									class="text-primary truncate block"
+									href={ templ.URL(fmt.Sprintf("/podcasts/%s/episodes/%d", name, stat.ShortestEpisodeId)) }
+								>{ stat.ShortestEpisodeTitle }</a>
 							</div>
 						</div>
 					</div>

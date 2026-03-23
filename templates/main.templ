@@ -30,7 +30,11 @@ templ Layout(title string, metaTags, bodyContent templ.Component) {
 			<link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet"/>
 			<link href="/static/styles.css" rel="stylesheet"/>
 		</head>
-		<body onload={ pages.BodyScripts() } hx-boost="true">
+		<body
+			onload={ pages.BodyScripts() }
+			hx-boost="true"
+			class="w-full md:w-[80%] max-w-7xl mx-auto px-4"
+		>
 			@bodyContent
 			<script src="/static/scripts.js"></script>
 		</body>

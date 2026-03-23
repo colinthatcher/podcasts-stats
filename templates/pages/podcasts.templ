@@ -3,14 +3,26 @@ package pages
 import "fmt"
 
 templ Podcasts(podcasts []string) {
-	<div>
-		<ul>
+	<div class="max-w-3xl mx-auto px-4 py-8">
+		<div class="mb-8">
+			<h1 class="text-2xl font-bold mb-1">Podcasts</h1>
+			<p class="text-sm text-base-content/50">Select a podcast to browse episodes and stats</p>
+		</div>
+		<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 			for _, podcast := range podcasts {
-				<li>
-					{{ url := fmt.Sprintf("/podcasts/%s/episodes", podcast) }}
-					<a href={ templ.URL(url) }>{ podcast }</a>
-				</li>
+				{{ url := fmt.Sprintf("/podcasts/%s/episodes", podcast) }}
+				<a href={ templ.URL(url) } class="group block border border-base-300 rounded-lg p-5 bg-base-200 hover:border-primary hover:bg-base-100 transition-colors">
+					<div class="flex items-center justify-between">
+						<div class="flex items-center gap-3">
+							<div class="w-10 h-10 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-lg">
+								{ string([]rune(podcast)[0]) }
+							</div>
+							<span class="font-medium">{ podcast }</span>
+						</div>
+						<span class="text-base-content/30 group-hover:text-primary transition-colors">→</span>
+					</div>
+				</a>
 			}
-		</ul>
+		</div>
 	</div>
 }
