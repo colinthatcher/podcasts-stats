@@ -15,6 +15,7 @@ COPY . .
 
 # Set necessary environment variables and build your project.
 ENV CGO_ENABLED=0 GIN_MODE=release
+RUN go install github.com/a-h/templ/cmd/templ@latest && templ generate
 RUN go build -ldflags="-s -w" -o gowebly_gin
 
 FROM gcr.io/distroless/static

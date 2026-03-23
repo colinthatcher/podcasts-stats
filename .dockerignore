@@ -21,7 +21,6 @@ LICENSE
 .gitignore
 .postcssrc
 Dockerfile
-**/*.templ
 **/*_test.go
 package.json
 *-lock.json
