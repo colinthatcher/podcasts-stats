@@ -17,7 +17,7 @@ COPY . .
 ENV CGO_ENABLED=0 GIN_MODE=release
 RUN go build -ldflags="-s -w" -o gowebly_gin
 
-FROM scratch
+FROM gcr.io/distroless/static
 
 # Copy project's binary and templates from /build to the scratch container.
 COPY --from=builder /build/gowebly_gin /
