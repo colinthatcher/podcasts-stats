@@ -55,5 +55,3 @@ lerna-debug.log*
 *.test
 *.tmp
 *.out
-
-*_templ.go
