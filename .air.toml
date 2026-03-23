@@ -5,7 +5,7 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-pre_cmd = ["npm run build"]
+pre_cmd = []
 cmd = "go run github.com/a-h/templ/cmd/templ@latest generate && go build -o ./tmp/gowebly_gin ."
 bin = "tmp/gowebly_gin"
 include_ext = ["go", "templ", "html", "json", "js", "ts", "css", "scss"]

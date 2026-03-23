@@ -7,12 +7,6 @@ templ Layout(title string, metaTags, bodyContent templ.Component) {
 	<html lang="en" data-theme="dark">
 		<head>
 			<meta charset="UTF-8"/>
-			<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-			<meta http-equiv="X-UA-Compatible" content="ie=edge"/>
-			<meta
-				http-equiv="Content-Security-Policy"
-				content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self' ws://localhost:*; img-src 'self' data:*;"
-			/>
 			<meta name="theme-color" content="#FEFEF5"/>
 			<title>{ title }</title>
 			if metaTags != nil {
@@ -22,13 +16,15 @@ templ Layout(title string, metaTags, bodyContent templ.Component) {
 			<link rel="dns-prefetch" href="//fonts.gstatic.com"/>
 			<link rel="preconnect" href="//fonts.googleapis.com" crossorigin/>
 			<link rel="preconnect" href="//fonts.gstatic.com" crossorigin/>
-			<link rel="manifest" href="/static/manifest.webmanifest"/>
-			<link rel="apple-touch-icon" href="/static/apple-touch-icon.png"/>
-			<link rel="shortcut icon" href="/static/favicon.ico" type="image/x-icon"/>
-			<link rel="icon" href="/static/favicon.svg" type="image/svg+xml"/>
-			<link rel="icon" href="/static/favicon.png" sizes="any"/>
 			<link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet"/>
-			<link href="/static/styles.css" rel="stylesheet"/>
+			// htmx
+			<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.8/dist/htmx.js" integrity="sha384-ezjq8118wdwdRMj+nX4bevEi+cDLTbhLAeFF688VK8tPDGeLUe0WoY2MZtSla72F" crossorigin="anonymous"></script>
+			// tailwind
+			<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+			// daisy component library
+			<link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css"/>
+			<link href="https://cdn.jsdelivr.net/npm/daisyui@5/themes.css" rel="stylesheet" type="text/css"/>
+			<script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
 		</head>
 		<body
 			onload={ pages.BodyScripts() }
@@ -36,7 +32,6 @@ templ Layout(title string, metaTags, bodyContent templ.Component) {
 			class="w-full md:w-[80%] max-w-7xl mx-auto px-4"
 		>
 			@bodyContent
-			<script src="/static/scripts.js"></script>
 		</body>
 	</html>
 }

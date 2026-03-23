@@ -2,9 +2,7 @@ package main
 
 import (
 	"context"
-	"embed"
 	"fmt"
-	"io/fs"
 	"log/slog"
 	"net/http"
 	"strconv"
@@ -15,9 +13,6 @@ import (
 	"github.com/gin-gonic/gin/render"
 	gowebly "github.com/gowebly/helpers"
 )
-
-//go:embed static
-var staticFiles embed.FS
 
 // TemplRender implements the render.Render interface.
 type TemplRender struct {
@@ -64,14 +59,6 @@ func runServer() error {
 
 	// Define HTML renderer for template engine.
 	router.HTMLRender = &TemplRender{}
-
-	// Handle static files.
-	// Serve embedded static files instead of from disk
-	sub, err := fs.Sub(staticFiles, "static")
-	if err != nil {
-		return err
-	}
-	router.StaticFS("/static", http.FS(sub))
 
 	// Handle index page view.
 	router.GET("/", IndexViewHandler)

@@ -22,7 +22,6 @@ FROM gcr.io/distroless/static
 
 # Copy project's binary and templates from /build to the scratch container.
 COPY --from=builder /build/gowebly_gin /
-COPY --from=builder /build/static /static
 
 
 # Set entry point.
