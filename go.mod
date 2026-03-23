@@ -1,4 +1,4 @@
-module github.com/colinthatcher/podcast-stats-webapp
+module github.com/colinthatcher/podcast-stats
 
 go 1.24
 

@@ -16,13 +16,13 @@ And some words [about the Gowebly CLI](#about-the-gowebly-cli).
 
 Backend:
 
-- Module name in the go.mod file: `github.com/colinthatcher/podcast-stats-webapp`
+- Module name in the go.mod file: `github.com/colinthatcher/podcast-stats`
 - Go web framework/router: `Gin`
 - Server port: `8080`
 
 Frontend:
 
-- Package name in the package.json file: `podcast-stats-webapp`
+- Package name in the package.json file: `podcast-stats`
 - Reactivity library: `htmx`
 - CSS framework: `Tailwind CSS with daisyUI components`
 

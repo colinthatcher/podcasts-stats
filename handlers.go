@@ -8,10 +8,10 @@ import (
 
 	"github.com/angelofallars/htmx-go"
 
-	"github.com/colinthatcher/podcast-stats-webapp/internal"
-	"github.com/colinthatcher/podcast-stats-webapp/templates"
-	"github.com/colinthatcher/podcast-stats-webapp/templates/pages"
-	"github.com/colinthatcher/podcast-stats-webapp/templates/pages/podcasts"
+	"github.com/colinthatcher/podcast-stats/internal"
+	"github.com/colinthatcher/podcast-stats/templates"
+	"github.com/colinthatcher/podcast-stats/templates/pages"
+	"github.com/colinthatcher/podcast-stats/templates/pages/podcasts"
 
 	"github.com/gin-gonic/gin"
 )

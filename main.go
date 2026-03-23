@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"os"
 
-	"github.com/colinthatcher/podcast-stats-webapp/internal"
+	"github.com/colinthatcher/podcast-stats/internal"
 )
 
 func main() {
