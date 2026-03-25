@@ -106,10 +106,11 @@ templ PodcastBaseLayout(podcastName string, activeNav NavElement, podcastContent
 											<span class="ml-2">published after date</span>
 										</div>
 										<div class="pt-2 border-t border-base-300 text-base-content/50">
-											<p class="mb-1">Quote any string to search for a sequence of words. <code class="text-pimary/80">"eagle eye"</code></p>
-											<p class="mb-1">Prefix any term with <code class="text-primary/80">-</code> to negate it. Example:</p>
-											<code class="text-primary/80 block mt-1">title="eagle eye" -duration{ "<" }1h -description=highlights</code>
-											<p class="mt-2">Terms are chained with AND logic.</p>
+											<p class="mb-1">Quote any string to search for a sequence of words. <code class="text-primary/80">"eagle eye"</code></p>
+											<p class="mb-1">Prefix any term with <code class="text-primary/80">-</code> to negate it.</p>
+											<p class="mb-1">Terms are chained with AND logic.</p>
+											<p class="mt-2">Example complex query:</p>
+											<code class="text-primary/80 block mb-1">title="eagle eye" -duration{ "<" }1h -description=highlights</code>
 										</div>
 									</div>
 								</div>
