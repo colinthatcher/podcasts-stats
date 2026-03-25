@@ -53,7 +53,11 @@ func createTerm(term string) *Term {
 	parts := strings.Split(term, operation)
 
 	if string(parts[0][0]) == NEGATIVE {
-		parts[0] = parts[0][1:]
+		if len(parts[0]) == 1 {
+			parts = parts[1:]
+		} else {
+			parts[0] = parts[0][1:]
+		}
 		t.Negated = true
 	}
 
@@ -76,9 +80,7 @@ func createTerm(term string) *Term {
 		t.Value = parts[1]
 		t.Operation = operation
 	default:
-		t = &Term{
-			Value: term,
-		}
+		t.Value = strings.Join(parts, "")
 	}
 
 	return t
