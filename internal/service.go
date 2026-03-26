@@ -87,21 +87,18 @@ func init() {
 
 func PeriodicallyFetchRSSFeed() {
 	// start process to periodically fetch the rss feed
-	rssFeedFetchTicker := time.NewTicker(59 * time.Minute)
-	slog.Info("Starting background rss feed checker...")
-	for {
-		select {
-		case <-rssFeedFetchTicker.C:
-			slog.Info("checking for updates to podcast feed...")
-			for _, podcast := range AvailablePodcasts {
-				feedBytes, err := GetRSSFeed(podcast.Name, podcast.FeedUrl)
-				if err != nil {
-					slog.Error("failed to update podcast in ticker", "podcastName", podcast.Name, "error", err)
-				}
-
-				parsedPodcast := PodcastFromBytes(feedBytes)
-				store.addPodcast(podcast.Name, parsedPodcast)
+	rssFeedFetchTicker := time.NewTicker(61 * time.Minute)
+	slog.Info("Starting background rss feed checker to run every 61 minutes...")
+	for range rssFeedFetchTicker.C {
+		slog.Info("checking for updates to podcast feed...")
+		for _, podcast := range AvailablePodcasts {
+			feedBytes, err := GetRSSFeed(podcast.Name, podcast.FeedUrl)
+			if err != nil {
+				slog.Error("failed to update podcast in ticker", "podcastName", podcast.Name, "error", err)
 			}
+
+			parsedPodcast := PodcastFromBytes(feedBytes)
+			store.addPodcast(podcast.Name, parsedPodcast)
 		}
 	}
 }
