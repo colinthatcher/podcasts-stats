@@ -153,7 +153,7 @@ func PodcastFromBytes(bytes []byte) *Podcast {
 			return nil
 		}
 
-		item.Id = len(podcast.Channel.Items) - i - 1
+		item.Id = len(podcast.Channel.Items) - i
 		item.Duration = duration
 		item.PublishDate = parsedTime
 	}

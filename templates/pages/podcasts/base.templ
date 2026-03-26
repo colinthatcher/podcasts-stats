@@ -105,6 +105,10 @@ templ PodcastBaseLayout(podcastName string, activeNav NavElement, podcastContent
 											<code class="text-primary">publish_time{ ">" }2024-01-01T00:00:00Z</code>
 											<span class="ml-2">published after date</span>
 										</div>
+										<div>
+											<code class="text-primary">publish_time{ "<" }2024-01-01T00:00:00Z</code>
+											<span class="ml-2">published before date</span>
+										</div>
 										<div class="pt-2 border-t border-base-300 text-base-content/50">
 											<p class="mb-1">Quote any string to search for a sequence of words. <code class="text-primary/80">"eagle eye"</code></p>
 											<p class="mb-1">Prefix any term with <code class="text-primary/80">-</code> to negate it.</p>

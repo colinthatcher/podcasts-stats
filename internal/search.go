@@ -165,7 +165,6 @@ func searchEpisodesByTerm(term *Term, items []*Item) []*Item {
 				foundItems = append(foundItems, item)
 				continue
 			}
-		// TODO: Add the other supported operations
 		case DURATION:
 			parsedDuration, err := time.ParseDuration(term.Value)
 			if err != nil {

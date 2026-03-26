@@ -22,12 +22,28 @@ var AvailablePodcasts = []*AvailablePodcastMetadata{
 		FeedUrl: "https://feeds.simplecast.com/_ENNUG3a",
 	},
 	{
+		Name:    "Phillies Talk",
+		FeedUrl: "https://feeds.simplecast.com/GtcqZGk4",
+	},
+	{
+		Name:    "Sixers Talk",
+		FeedUrl: "https://feeds.simplecast.com/jxr32ewl",
+	},
+	{
+		Name:    "Flyers Talk",
+		FeedUrl: "https://feeds.simplecast.com/5lwfh_0s",
+	},
+	{
+		Name:    "Takeoff with John Clark",
+		FeedUrl: "https://feeds.simplecast.com/sx0cuZun",
+	},
+	{
 		Name:    "Go Birds!",
 		FeedUrl: "https://feeds.megaphone.fm/ENTDM6324343768",
 	},
 	{
-		Name:    "Phillies Talk",
-		FeedUrl: "https://feeds.simplecast.com/GtcqZGk4",
+		Name:    "New Heights",
+		FeedUrl: "https://rss.art19.com/new-heights",
 	},
 }
 
