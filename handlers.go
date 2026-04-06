@@ -19,35 +19,9 @@ import (
 // Views
 
 // indexViewHandler handles a view for the index page.
-// TODO: This should eventually be removed and the home page be actually made
 func IndexViewHandler(c *gin.Context) {
-
-	// Define template meta tags.
-	metaTags := pages.MetaTags(
-		"gowebly, htmx example page, go with htmx",               // define meta keywords
-		"Welcome to example! You're here because it worked out.", // define meta description
-	)
-
-	// Define template body content.
-	bodyContent := pages.BodyContent(
-		"Welcome to example!",                // define h1 text
-		"You're here because it worked out.", // define p text
-	)
-
-	// Define template layout for index page.
-	indexTemplate := templates.Layout(
-		"Welcome to example!", // define title text
-		metaTags,              // define meta tags
-		bodyContent,           // define body content
-	)
-
-	// Render index page template.
-	if err := htmx.NewResponse().RenderTempl(c.Request.Context(), c.Writer, indexTemplate); err != nil {
-		// If not, return HTTP 500 error.
-		c.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
-
+	c.Redirect(http.StatusPermanentRedirect, "/podcasts")
+	return
 }
 
 func PodcastsViewHandler(c *gin.Context) {

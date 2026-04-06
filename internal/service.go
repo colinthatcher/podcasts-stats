@@ -358,7 +358,7 @@ func getDaysInYear(year int) []string {
 			switch month {
 			case 2:
 				// February
-				if isLeapYear(year) && day == 30 {
+				if day == 30 || day == 31 {
 					continue
 				} else if !isLeapYear(year) && day == 29 {
 					continue
@@ -381,5 +381,5 @@ func getDaysInYear(year int) []string {
 }
 
 func isLeapYear(year int) bool {
-	return year%4 == 0 && year%100 != 0 || year%400 == 0
+	return (year%4 == 0 && year%100 != 0) || year%400 == 0
 }

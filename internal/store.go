@@ -15,7 +15,6 @@ type AvailablePodcastMetadata struct {
 	FeedUrl string
 }
 
-// TODO: Make use of this new variable
 var AvailablePodcasts = []*AvailablePodcastMetadata{
 	{
 		Name:    "Eagle Eye",

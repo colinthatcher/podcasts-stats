@@ -67,18 +67,34 @@ templ EpisodesHeatmap(stat *internal.PodcastStats) {
 	{{ offset := heatmapStartOffset(stat) }}
 	<div class="flex flex-col gap-2">
 		<h3 class="text-sm font-medium text-base-content/70">Episode frequency</h3>
-		<div class="w-full overflow-x-auto pt-8">
-			<div class="grid grid-rows-7 grid-flow-col gap-1 w-max mx-auto">
-				for i := 0; i < offset; i++ {
-					<div class="w-3 h-3"></div>
-				}
-				for _, date := range stat.EpisodesPerDayOrder {
-					{{ count := stat.EpisodesPerDay[date] }}
-					<div
-						class={ "w-3 h-3 rounded-sm tooltip tooltip-top shrink-0", heatmapColor(count) }
-						data-tip={ fmt.Sprintf("%s: %d ep", date, count) }
-					></div>
-				}
+		<div class="w-full overflow-x-auto overflow-y-visible pt-2 pb-8">
+			<div class="flex justify-center">
+				<div class="flex gap-1">
+					<!-- Fixed day-label column -->
+					<div class="grid grid-rows-7 gap-1 shrink-0">
+						for _, day := range []time.Weekday{
+							time.Sunday, time.Monday, time.Tuesday,
+							time.Wednesday, time.Thursday, time.Friday, time.Saturday,
+						} {
+							<div class="w-8 h-3 text-xs text-base-content/50 leading-3 flex items-center">
+								{ weekdayLabel(day) }
+							</div>
+						}
+					</div>
+					<!-- Scrollable heatmap grid -->
+					<div class="grid grid-rows-7 grid-flow-col gap-1 w-max overflow-visible">
+						for i := 0; i < offset; i++ {
+							<div class="w-3 h-3"></div>
+						}
+						for _, date := range stat.EpisodesPerDayOrder {
+							{{ count := stat.EpisodesPerDay[date] }}
+							<div
+								class={ "w-3 h-3 rounded-sm shrink-0", heatmapColor(count) }
+								title={ fmt.Sprintf("%s: %d ep", date, count) }
+							></div>
+						}
+					</div>
+				</div>
 			</div>
 		</div>
 		<div class="flex justify-center items-center gap-2 text-xs text-base-content/50">
