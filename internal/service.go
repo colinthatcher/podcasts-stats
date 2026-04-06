@@ -111,6 +111,13 @@ func PodcastFromBytes(bytes []byte) *Podcast {
 		return nil
 	}
 
+	// cleanup episodes
+	for i, item := range podcast.Channel.Items {
+		if strings.Contains(strings.ToLower(item.Title), "trailer") {
+			podcast.Channel.Items = append(podcast.Channel.Items[:i], podcast.Channel.Items[i+1:]...)
+		}
+	}
+
 	// special parsing
 	for i, item := range podcast.Channel.Items {
 		// parse out proper duration
@@ -204,21 +211,90 @@ func GetPodcastEpisode(name string, id string) (*Item, error) {
 	return episode, nil
 }
 
-type PodcastStats struct {
-	Year                 string
-	NumEpisodes          int
-	TotalDuration        time.Duration
-	AvgDuration          time.Duration
-	LongestEpisode       time.Duration
-	LongestEpisodeTitle  string
-	LongestEpisodeDate   time.Time
-	LongestEpisodeId     int
-	ShortestEpisode      time.Duration
-	ShortestEpisodeTitle string
-	ShortestEpisodeDate  time.Time
-	ShortestEpisodeId    int
+type PodcastStatsDayOfTheWeek struct {
+	NumEpisodes   int
+	TotalDuration time.Duration
+	AvgDuration   time.Duration
 }
 
+type PodcastStats struct {
+	Year                   string
+	NumEpisodes            int
+	TotalDuration          time.Duration
+	AvgDuration            time.Duration
+	LongestEpisode         time.Duration
+	LongestEpisodeTitle    string
+	LongestEpisodeDate     time.Time
+	LongestEpisodeId       int
+	ShortestEpisode        time.Duration
+	ShortestEpisodeTitle   string
+	ShortestEpisodeDate    time.Time
+	ShortestEpisodeId      int
+	EpisodesPerDayOrder    []string
+	EpisodesPerDay         map[string]int // displays github style timeline of podcasts per day
+	StatsPerDayOfTheWeek   map[time.Weekday]*PodcastStatsDayOfTheWeek
+	AvgDaysBetweenEpisodes time.Duration
+}
+
+func (p *PodcastStats) saveLongestEpisode(item *Item) {
+	p.LongestEpisode = item.Duration
+	p.LongestEpisodeDate = item.PublishDate
+	p.LongestEpisodeTitle = item.Title
+	p.LongestEpisodeId = item.Id
+}
+
+func (p *PodcastStats) saveShortestEpisode(item *Item) {
+	p.ShortestEpisode = item.Duration
+	p.ShortestEpisodeDate = item.PublishDate
+	p.ShortestEpisodeTitle = item.Title
+	p.ShortestEpisodeId = item.Id
+}
+
+func (p *PodcastStats) gatherItemStats(item *Item) {
+	p.NumEpisodes++
+	p.TotalDuration += item.Duration
+	if item.Duration > p.LongestEpisode {
+		p.saveLongestEpisode(item)
+	}
+	if item.Duration < p.ShortestEpisode {
+		p.saveShortestEpisode(item)
+	}
+	if _, exists := p.EpisodesPerDay[item.PublishDate.Format("2006-01-02")]; exists {
+		p.EpisodesPerDay[item.PublishDate.Format("2006-01-02")]++
+	}
+	p.StatsPerDayOfTheWeek[item.PublishDate.Weekday()].NumEpisodes++
+	p.StatsPerDayOfTheWeek[item.PublishDate.Weekday()].TotalDuration += item.Duration
+}
+
+func NewPodcastStat(year int, isTotal bool) *PodcastStats {
+	ps := &PodcastStats{
+		ShortestEpisode:      math.MaxInt64,
+		StatsPerDayOfTheWeek: map[time.Weekday]*PodcastStatsDayOfTheWeek{},
+	}
+	if year == 0 && isTotal {
+		ps.Year = "total"
+	} else {
+		ps.Year = strconv.Itoa(year)
+		ps.EpisodesPerDayOrder = getDaysInYear(year)
+		emptyEpisodesPerDay := map[string]int{}
+		for _, day := range ps.EpisodesPerDayOrder {
+			emptyEpisodesPerDay[day] = 0
+		}
+		ps.EpisodesPerDay = emptyEpisodesPerDay
+	}
+
+	for _, day := range []time.Weekday{
+		time.Sunday, time.Monday, time.Tuesday,
+		time.Wednesday, time.Thursday, time.Friday, time.Saturday,
+	} {
+		weekday := &PodcastStatsDayOfTheWeek{}
+		ps.StatsPerDayOfTheWeek[day] = weekday
+	}
+
+	return ps
+}
+
+// TODO: Fix year frequency of podcasts
 func GetPodcastStats(name string, searchOpts *SearchOptions) ([]*PodcastStats, error) {
 	podcast, err := GetPodcast(name, searchOpts)
 	if err != nil {
@@ -226,64 +302,41 @@ func GetPodcastStats(name string, searchOpts *SearchOptions) ([]*PodcastStats, e
 	}
 
 	// gather stats
-	totalStats := &PodcastStats{
-		Year:            "total",
-		ShortestEpisode: math.MaxInt64,
-	}
+	totalStats := NewPodcastStat(0, true)
 	stats := make(map[string]*PodcastStats)
 	for _, item := range podcast.Channel.Items {
-		totalStats.TotalDuration += item.Duration
-		totalStats.NumEpisodes++
-		if item.Duration > totalStats.LongestEpisode {
-			totalStats.LongestEpisode = item.Duration
-			totalStats.LongestEpisodeDate = item.PublishDate
-			totalStats.LongestEpisodeTitle = item.Title
-			totalStats.LongestEpisodeId = item.Id
-		}
-		if item.Duration < totalStats.ShortestEpisode {
-			totalStats.ShortestEpisode = item.Duration
-			totalStats.ShortestEpisodeDate = item.PublishDate
-			totalStats.ShortestEpisodeTitle = item.Title
-			totalStats.ShortestEpisodeId = item.Id
-		}
+		totalStats.gatherItemStats(item)
 
 		year := strconv.Itoa(item.PublishDate.Year())
 		if yearStat, exists := stats[year]; exists {
-			yearStat.NumEpisodes++
-			yearStat.TotalDuration += item.Duration
-			if item.Duration > yearStat.LongestEpisode {
-				yearStat.LongestEpisode = item.Duration
-				yearStat.LongestEpisodeDate = item.PublishDate
-				yearStat.LongestEpisodeTitle = item.Title
-				yearStat.LongestEpisodeId = item.Id
-			}
-			if item.Duration < yearStat.ShortestEpisode {
-				yearStat.ShortestEpisode = item.Duration
-				yearStat.ShortestEpisodeDate = item.PublishDate
-				yearStat.ShortestEpisodeTitle = item.Title
-				yearStat.ShortestEpisodeId = item.Id
-			}
-
+			yearStat.gatherItemStats(item)
 		} else {
-			stats[year] = &PodcastStats{
-				Year:            strconv.Itoa(item.PublishDate.Year()),
-				NumEpisodes:     1,
-				TotalDuration:   item.Duration,
-				LongestEpisode:  item.Duration,
-				ShortestEpisode: item.Duration,
-			}
+			yearStat := NewPodcastStat(item.PublishDate.Year(), false)
+			yearStat.gatherItemStats(item)
+			stats[year] = yearStat
 		}
 	}
 	stats["total"] = totalStats
 
 	var years []string
-	for _, v := range stats {
+	for y, v := range stats {
 		// grab the year for sorting
 		years = append(years, v.Year)
 
 		// calc avg duration of episodes
 		avg := int(v.TotalDuration.Seconds()) / v.NumEpisodes
 		v.AvgDuration = time.Duration(avg) * time.Second
+
+		// calc avg duration of weekdays
+		for _, weekday := range stats[y].StatsPerDayOfTheWeek {
+			if weekday.NumEpisodes == 0 {
+				continue
+			}
+
+			weekdayAvg := int(weekday.TotalDuration.Seconds()) / weekday.NumEpisodes
+			weekday.AvgDuration = time.Duration(weekdayAvg) * time.Second
+			slog.Info("debugging stats", "stats", weekday)
+		}
 	}
 
 	// Sort by total, and then newest year first
@@ -295,4 +348,38 @@ func GetPodcastStats(name string, searchOpts *SearchOptions) ([]*PodcastStats, e
 		output = append(output, stats[year])
 	}
 	return output, nil
+}
+
+// get an array strings matching every day in a given year
+func getDaysInYear(year int) []string {
+	days := make([]string, 0)
+	for month := 1; month <= 12; month++ {
+		for day := 1; day <= 31; day++ {
+			switch month {
+			case 2:
+				// February
+				if isLeapYear(year) && day == 30 {
+					continue
+				} else if !isLeapYear(year) && day == 29 {
+					continue
+				} else {
+					days = append(days, fmt.Sprintf("%d-%02d-%02d", year, month, day))
+				}
+			case 4, 6, 9, 11:
+				// 30 day months - April, June, September, November
+				if day == 31 {
+					continue
+				}
+				days = append(days, fmt.Sprintf("%d-%02d-%02d", year, month, day))
+			default:
+				// 31 day months
+				days = append(days, fmt.Sprintf("%d-%02d-%02d", year, month, day))
+			}
+		}
+	}
+	return days
+}
+
+func isLeapYear(year int) bool {
+	return year%4 == 0 && year%100 != 0 || year%400 == 0
 }

@@ -3,6 +3,7 @@ package podcasts
 import (
 	"fmt"
 	"github.com/colinthatcher/podcast-stats/internal"
+	"time"
 )
 
 templ PodcastStats(name string, stats []*internal.PodcastStats, searchOpts *internal.SearchOptions) {
@@ -19,7 +20,7 @@ templ PodcastStats(name string, stats []*internal.PodcastStats, searchOpts *inte
 					<span class="text-base font-medium">{ stat.Year }</span>
 					<span class="text-sm text-base-content/50">{ stat.NumEpisodes } episodes &middot; avg { stat.AvgDuration }</span>
 				</div>
-				<div class="collapse-content pt-3">
+				<div class="collapse-content pt-3 flex flex-col gap-6">
 					<div class="stats shadow w-full">
 						<div class="stat">
 							<div class="stat-title">Avg duration</div>
@@ -50,8 +51,148 @@ templ PodcastStats(name string, stats []*internal.PodcastStats, searchOpts *inte
 							</div>
 						</div>
 					</div>
+					<!-- Heatmap -->
+					if stat.Year != "total" {
+						@EpisodesHeatmap(stat)
+					}
+					<!-- Day of week breakdown -->
+					@DayOfWeekBreakdown(stat)
 				</div>
 			</div>
 		}
 	</div>
+}
+
+templ EpisodesHeatmap(stat *internal.PodcastStats) {
+	{{ offset := heatmapStartOffset(stat) }}
+	<div class="flex flex-col gap-2">
+		<h3 class="text-sm font-medium text-base-content/70">Episode frequency</h3>
+		<div class="w-full overflow-x-auto pt-8">
+			<div class="grid grid-rows-7 grid-flow-col gap-1 w-max mx-auto">
+				for i := 0; i < offset; i++ {
+					<div class="w-3 h-3"></div>
+				}
+				for _, date := range stat.EpisodesPerDayOrder {
+					{{ count := stat.EpisodesPerDay[date] }}
+					<div
+						class={ "w-3 h-3 rounded-sm tooltip tooltip-top shrink-0", heatmapColor(count) }
+						data-tip={ fmt.Sprintf("%s: %d ep", date, count) }
+					></div>
+				}
+			</div>
+		</div>
+		<div class="flex justify-center items-center gap-2 text-xs text-base-content/50">
+			<span>Fewer</span>
+			<div class="w-3 h-3 rounded-sm bg-base-300"></div>
+			<div class="w-3 h-3 rounded-sm bg-success/30"></div>
+			<div class="w-3 h-3 rounded-sm bg-success/60"></div>
+			<div class="w-3 h-3 rounded-sm bg-success"></div>
+			<span>More</span>
+		</div>
+	</div>
+}
+
+templ DayOfWeekBreakdown(stat *internal.PodcastStats) {
+	{{ maxEps := maxEpisodesPerDay(stat) }}
+	<div class="flex flex-col gap-2">
+		<h3 class="text-sm font-medium text-base-content/70">Episodes by day of week</h3>
+		<div class="grid grid-cols-7 gap-2 items-end h-20">
+			for _, day := range []time.Weekday{
+				time.Sunday, time.Monday, time.Tuesday,
+				time.Wednesday, time.Thursday, time.Friday, time.Saturday,
+			} {
+				{{ s := stat.StatsPerDayOfTheWeek[day] }}
+				{{ pct := barHeightPct(s.NumEpisodes, maxEps) }}
+				<div class="flex flex-col items-center justify-end h-full group relative">
+					<div
+						class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-10
+						hidden group-hover:flex flex-col items-start gap-0.5
+						bg-base-300 text-base-content rounded px-2 py-1.5 shadow-md
+						text-xs whitespace-nowrap pointer-events-none"
+					>
+						<span class="text-base-content/50">
+							{ "episodes " }
+							<span class="text-base-content font-medium">{ fmt.Sprintf("%d", s.NumEpisodes) }</span>
+						</span>
+						<span class="text-base-content/50">
+							{ "avg duration " }
+							<span class="text-base-content font-medium">{ s.AvgDuration }</span>
+						</span>
+						<span class="text-base-content/50">
+							{ "total time " }
+							<span class="text-base-content font-medium">{ s.TotalDuration }</span>
+						</span>
+					</div>
+					<div
+						class="w-full rounded-t-sm bg-success/60 group-hover:bg-success transition-colors"
+						style={ fmt.Sprintf("height: %d%%", pct) }
+					></div>
+				</div>
+			}
+		</div>
+		<div class="grid grid-cols-7 gap-2">
+			for _, day := range []time.Weekday{
+				time.Sunday, time.Monday, time.Tuesday,
+				time.Wednesday, time.Thursday, time.Friday, time.Saturday,
+			} {
+				{{ s := stat.StatsPerDayOfTheWeek[day] }}
+				<div class="flex flex-col items-center gap-0.5">
+					<span class="text-xs text-base-content/40 text-center">{ weekdayLabel(day) }</span>
+					<span class="text-xs font-medium text-base-content/60 text-center">{ fmt.Sprintf("%d", s.NumEpisodes) }</span>
+				</div>
+			}
+		</div>
+	</div>
+}
+
+func maxEpisodesPerDay(stat *internal.PodcastStats) int {
+	max := 1
+	for _, s := range stat.StatsPerDayOfTheWeek {
+		if s.NumEpisodes > max {
+			max = s.NumEpisodes
+		}
+	}
+	return max
+}
+
+func barHeightPct(count, max int) int {
+	if max == 0 {
+		return 0
+	}
+	pct := (count * 100) / max
+	if pct < 4 && count > 0 {
+		return 4
+	}
+	return pct
+}
+
+func heatmapColor(count int) string {
+	switch {
+	case count == 0:
+		return "bg-base-300"
+	case count == 1:
+		return "bg-success/30"
+	case count == 2:
+		return "bg-success/60"
+	default:
+		return "bg-success"
+	}
+}
+
+func weekdayLabel(day time.Weekday) string {
+	return day.String()[:3]
+}
+
+// Returns how many empty cells to prepend so the first date aligns to its weekday row.
+// EpisodesPerDayOrder is assumed sorted descending (most recent first).
+func heatmapStartOffset(stat *internal.PodcastStats) int {
+	if len(stat.EpisodesPerDayOrder) == 0 {
+		return 0
+	}
+	first := stat.EpisodesPerDayOrder[0]
+	t, err := time.Parse("2006-01-02", first)
+	if err != nil {
+		return 0
+	}
+	return int(t.Weekday()) // Sunday=0, Monday=1, ...
 }
