@@ -21,7 +21,6 @@ import (
 // indexViewHandler handles a view for the index page.
 func IndexViewHandler(c *gin.Context) {
 	c.Redirect(http.StatusPermanentRedirect, "/podcasts")
-	return
 }
 
 func PodcastsViewHandler(c *gin.Context) {
@@ -52,14 +51,12 @@ func PodcastEpisodesViewHandler(c *gin.Context) {
 		slog.ErrorContext(c.Request.Context(), "failed to parse search parameters.", "err", err)
 	}
 
-	slog.InfoContext(c.Request.Context(), "performing episode search with query.", "searchOpts", searchOpts)
 	podcast, err = internal.GetPodcast(podcastName, searchOpts)
 	if err != nil {
 		slog.ErrorContext(c.Request.Context(), "failed to find podcast.", "name", podcastName)
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
-	slog.InfoContext(c.Request.Context(), "found podcast.", "name", podcastName)
 
 	episodePage := podcasts.PodcastEpisodes(podcastName, podcast, searchOpts)
 	podcastEpisodesTemplate := templates.Layout(
@@ -82,7 +79,6 @@ func PodcastEpisodeViewHandler(c *gin.Context) {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
-	slog.InfoContext(c.Request.Context(), "found podcast episode.", "episode", episode)
 
 	pages := podcasts.PodcastEpisode(episode)
 	podcastEpisodesTemplate := templates.Layout(
@@ -102,7 +98,6 @@ func PodcastStastsViewHandler(c *gin.Context) {
 	if err := c.ShouldBind(searchOpts); err != nil {
 		slog.ErrorContext(c.Request.Context(), "failed to parse search parameters.", "err", err)
 	}
-	slog.InfoContext(c.Request.Context(), "gathering podcast stats", "searchOpts", searchOpts)
 
 	// unset default search options to get all available episodes for the search criteria
 	searchOpts.Start = 0
@@ -113,7 +108,6 @@ func PodcastStastsViewHandler(c *gin.Context) {
 		c.AbortWithStatus(http.StatusNotFound)
 		return
 	}
-	slog.InfoContext(c.Request.Context(), "found podcast.", "name", podcastName)
 
 	pages := podcasts.PodcastStats(podcastName, stats, searchOpts)
 	template := templates.Layout(

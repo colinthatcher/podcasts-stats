@@ -2,7 +2,6 @@ package internal
 
 import (
 	"fmt"
-	"log/slog"
 	"strings"
 	"time"
 )
@@ -127,9 +126,7 @@ func searchSplitQuery(searchOpts *SearchOptions) []string {
 
 func searchPodcastEpisodes(podcast *Podcast, searchOpts *SearchOptions) []*Item {
 	// Parse search terms
-	// TODO: Doesn't work with the example query
 	rawTerms := searchSplitQuery(searchOpts)
-	slog.Info("checking search string splitting", "rawTerms", rawTerms)
 
 	// translate string segments into terms
 	terms := []*Term{}
@@ -139,7 +136,6 @@ func searchPodcastEpisodes(podcast *Podcast, searchOpts *SearchOptions) []*Item 
 			terms = append(terms, t)
 		}
 	}
-	slog.Info("parsed search terms", "terms", terms)
 
 	// translate search terms against items list
 	items := podcast.Channel.Items
@@ -168,7 +164,6 @@ func searchEpisodesByTerm(term *Term, items []*Item) []*Item {
 		case DURATION:
 			parsedDuration, err := time.ParseDuration(term.Value)
 			if err != nil {
-				slog.Warn("failed to parse search term duration", "value", term.Value, "err", err.Error())
 				continue
 			}
 			var condition bool
@@ -187,19 +182,19 @@ func searchEpisodesByTerm(term *Term, items []*Item) []*Item {
 				continue
 			}
 		case PUBLISH_DATE:
-			parsedTime, err := time.Parse(time.RFC3339, term.Value)
+			truncatePublishDate := item.PublishDate.Truncate(24 * time.Hour)
+			parsedTime, err := parseDateTime(term.Value)
 			if err != nil {
-				slog.Warn("failed to parse search term time", "value", term.Value, "err", err.Error())
 				continue
 			}
 			var condition bool
 			switch term.Operation {
 			case EQUALS:
-				condition = item.PublishDate.Equal(parsedTime)
+				condition = truncatePublishDate.Equal(parsedTime)
 			case GREATER_THAN:
-				condition = item.PublishDate.After(parsedTime)
+				condition = truncatePublishDate.After(parsedTime)
 			case LESS_THAN:
-				condition = item.PublishDate.Before(parsedTime)
+				condition = truncatePublishDate.Before(parsedTime)
 			default:
 				continue
 			}
@@ -218,4 +213,17 @@ func searchEpisodesByTerm(term *Term, items []*Item) []*Item {
 		}
 	}
 	return foundItems
+}
+
+func parseDateTime(value string) (time.Time, error) {
+	var t time.Time
+	var err error
+	allowedFormats := []string{"2006", "2006-01", "2006-01-02"}
+	for _, format := range allowedFormats {
+		t, err = time.Parse(format, value)
+		if err == nil {
+			break
+		}
+	}
+	return t, err
 }

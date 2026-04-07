@@ -301,6 +301,11 @@ func GetPodcastStats(name string, searchOpts *SearchOptions) ([]*PodcastStats, e
 		return nil, fmt.Errorf("podcast not found. err=%v", err.Error())
 	}
 
+	output := []*PodcastStats{}
+	if len(podcast.Channel.Items) <= 0 {
+		return output, nil
+	}
+
 	// gather stats
 	totalStats := NewPodcastStat(0, true)
 	stats := make(map[string]*PodcastStats)
@@ -335,7 +340,6 @@ func GetPodcastStats(name string, searchOpts *SearchOptions) ([]*PodcastStats, e
 
 			weekdayAvg := int(weekday.TotalDuration.Seconds()) / weekday.NumEpisodes
 			weekday.AvgDuration = time.Duration(weekdayAvg) * time.Second
-			slog.Info("debugging stats", "stats", weekday)
 		}
 	}
 
@@ -343,7 +347,6 @@ func GetPodcastStats(name string, searchOpts *SearchOptions) ([]*PodcastStats, e
 	slices.Sort(years)
 	slices.Reverse(years)
 
-	output := []*PodcastStats{}
 	for _, year := range years {
 		output = append(output, stats[year])
 	}

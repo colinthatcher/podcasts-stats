@@ -3,7 +3,6 @@ package internal
 import (
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"os"
 	"time"
@@ -18,14 +17,12 @@ func GetRSSFeed(podcastName string, url string) ([]byte, error) {
 	hourAgo := time.Now().Add(-1 * time.Hour)
 	if fileInfo.ModTime().After(hourAgo) {
 		// return the cached file
-		slog.Info("returning cached file", "filename", filename)
 		return os.ReadFile(filename)
 	}
 	return getAndPersistFeed(filename, url)
 }
 
 func getAndPersistFeed(filename string, url string) ([]byte, error) {
-	slog.Info("retrieving rss feed")
 	// else re-retrieve the file from the rss feed
 	content, err := fetchFeed(url)
 	if err != nil {
